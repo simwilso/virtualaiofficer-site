@@ -110,7 +110,7 @@ async function fetchAIResponse(userQuery) {
   ---
 
   **User Question:** ${userQuery}
-  **Relevant Answer (only from the knowledge base):**`;
+  **Answer:**`;
 
   const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
     method: "POST",
@@ -120,7 +120,7 @@ async function fetchAIResponse(userQuery) {
     },
     body: JSON.stringify({
       inputs: systemMessage,
-      parameters: { max_new_tokens: 200, temperature: 0.6 }
+      parameters: { max_new_tokens: 250, temperature: 0.3, top_p: 0.8 }
     })
   });
 
