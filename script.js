@@ -83,6 +83,7 @@ async function fetchAIResponse(userQuery) {
   });
 
   const data = await response.json();
+  console.log("API Response:", data);
   const aiReply = data[0]?.generated_text || "Sorry, I couldn't process that.";
 
   addMessage('AI', aiReply);
