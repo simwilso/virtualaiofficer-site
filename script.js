@@ -95,22 +95,19 @@ function addMessage(sender, text, applyTypingEffect = false) {
 // ========== FETCH AI RESPONSE ==========
 async function fetchAIResponse(userQuery) {
   const systemMessage = `
-  You are Marvin, an AI assistant for Virtual AI Officer. Your job is to answer user questions **ONLY** using the provided knowledge base.
-  
-  **Rules for answering:**
-  - Your responses **must** come from the knowledge base below.
-  - If the answer is **not in the knowledge base**, reply: "I'm not sure, but my team is always updating me!"
-  - **DO NOT** generate answers outside of the knowledge base.
-  - **DO NOT** invent facts, assume information, or add personal opinions.
-  - If the user asks something unrelated to the business, politely decline to answer.
+  You are Marvin, an AI assistant for Virtual AI Officer.
+  - Answer questions **ONLY using the knowledge base** provided below.
+  - **DO NOT repeat the entire knowledge base** in your response.
+  - **Extract only the most relevant parts** of the knowledge base related to the user's question.
+  - If the knowledge base **does not contain an answer**, say: "I'm not sure, but my team is always updating me!"
 
-  ---
-  # Knowledge Base:
+  === KNOWLEDGE BASE START ===
   ${knowledgeBaseText}
-  ---
+  === KNOWLEDGE BASE END ===
 
   **User Question:** ${userQuery}
-  **Answer:**`;
+  
+  Provide a relevant and concise answer (DO NOT include the knowledge base text itself):`;
 
   const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
     method: "POST",
@@ -120,14 +117,33 @@ async function fetchAIResponse(userQuery) {
     },
     body: JSON.stringify({
       inputs: systemMessage,
-      parameters: { max_new_tokens: 250, temperature: 0.3, top_p: 0.8 }
+      parameters: { 
+        max_new_tokens: 200, 
+        temperature: 0.1,  // Reduce randomness (AI should follow rules strictly)
+        top_p: 0.6,  // Prioritize high-confidence words
+        repetition_penalty: 1.4, // Stronger penalty for repeated phrases
+        stop: ["\n\n", "=== KNOWLEDGE BASE START ==="]  // Prevent AI from including full knowledge base in responses
+    }       
     })
   });
 
   const data = await response.json();
-  console.log("API Response:", data);
+  console.log("Raw API Response:", data);
 
   // Extract AI's response correctly
-  const aiReply = data[0]?.generated_text?.split("**Answer:**")?.[1]?.trim() || "I couldn't process that. Try again!";
-  addMessage('AI', aiReply, true);
+  let aiReply = data[0]?.generated_text || "I couldn't process that. Try again!";
+  console.log("Raw AI Output:", aiReply); // Debugging log
+  
+  // Remove instructions or repeated knowledge base references
+  if (aiReply.includes("=== KNOWLEDGE BASE START ===")) {
+      aiReply = aiReply.split("=== KNOWLEDGE BASE START ===")[0].trim();
+  }
+  
+  // Ensure AI doesn’t just repeat the whole knowledge base
+  if (aiReply.length > 500) {
+      aiReply = aiReply.substring(0, 500) + "...";
+  }
+  
+  addMessage('AI', aiReply, true);  
+    
 }
