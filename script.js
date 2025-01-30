@@ -1,4 +1,4 @@
-// script.js
+// ========== SELECTORS ==========
 const chatDisplay = document.getElementById('chatDisplay');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -45,8 +45,7 @@ function typeWriterEffect(text, speed) {
   type();
 }
 
-
-// Handle user input
+// ========== HANDLE USER INPUT ==========
 sendBtn.addEventListener('click', () => handleUserInput());
 userInput.addEventListener('keyup', (e) => {
   if (e.key === 'Enter') handleUserInput();
@@ -68,18 +67,18 @@ function handleUserInput() {
   fetchAIResponse(text);
 }
 
-// Display messages
+// ========== FUNCTION TO DISPLAY CHAT MESSAGES ==========
 function addMessage(sender, text) {
   const msgDiv = document.createElement('div');
   msgDiv.classList.add('chat-message');
   msgDiv.innerHTML = `<strong>${sender}:</strong> `;
   chatDisplay.appendChild(msgDiv);
 
-  typeWriterEffect(msgDiv, text, 30);
+  typeWriterEffect(text, 30);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
-// Fetch AI response
+// ========== FETCH AI RESPONSE ==========
 async function fetchAIResponse(userQuery) {
   const systemMessage = `
   You are Marvin, an AI assistant for Virtual AI Officer. Answer user questions based on the following knowledge base. 
@@ -113,6 +112,3 @@ async function fetchAIResponse(userQuery) {
   const aiReply = data[0]?.generated_text?.split("**Answer:**")?.[1]?.trim() || "I couldn't process that. Try again!";
   addMessage('AI', aiReply);
 }
-
-
-
