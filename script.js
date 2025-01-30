@@ -119,18 +119,61 @@ async function fetchAIResponse(userQuery) {
   `;
 
   try {
-    const response = await fetch(GITHUB_PROXY_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${GH_PAT_AI}`,  
-        "Accept": "application/vnd.github.v3+json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        event_type: "query-ai",
-        client_payload: { user_query: systemMessage }
-      })
+const GITHUB_PAT = "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"; // Replace with actual secret from GitHub
+
+async function fetchAIResponse(userQuery) {
+  const response = await fetch(GITHUB_PROXY_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${GITHUB_PAT}`,  
+      "Accept": "application/vnd.github.v3+json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      event_type: "query-ai",
+      client_payload: { user_query: systemMessage }
+    })
+  });
+
+  if (!response.ok) {
+    console.error(`GitHub API Authentication Failed: ${response.status} ${response.statusText}`);
+    addMessage('AI', "Authentication error. Please check your GitHub API token.", true);
+    return;
+  }
+
+  console.log("Query sent to GitHub Actions, waiting for response...");
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
+  const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
+    headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+  });
+
+  const artifactData = await artifactResponse.json();
+
+  if (artifactData.artifacts && artifactData.artifacts.length > 0) {
+    const artifactURL = artifactData.artifacts[0].archive_download_url;
+
+    const aiResponse = await fetch(artifactURL, {
+      headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
     });
+
+    const jsonData = await aiResponse.json();
+    console.log("AI Response:", jsonData);
+    
+    let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
+
+    if (aiReply.includes("BEGIN RESPONSE:")) {
+      aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
+    }
+    if (aiReply.includes("END RESPONSE")) {
+      aiReply = aiReply.split("END RESPONSE")[0]?.trim();
+    }
+
+    addMessage('AI', aiReply, true);
+  } else {
+    addMessage('AI', "I couldn't process that. Try again!", true);
+  }
+}
 
     if (!response.ok) {
       console.error("GitHub API Authentication Failed: Invalid Token or Missing Permissions.");
