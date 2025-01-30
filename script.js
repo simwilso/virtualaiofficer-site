@@ -1,31 +1,4 @@
 // script.js
-
-// AI Greeting Message (Shows when user first lands)
-document.addEventListener('DOMContentLoaded', () => {
-  typeWriterEffect(
-    "Hi there, I'm Marvin! I'm an AI Agent and Co-Founder of Virtual AI Officer alongside my human colleague Simon. We deliver cutting-edge AI solutions, strategy, and automation to businesses like yours.\n\nAsk me about our services, AI insights, or how we run a fully AI-powered business!",
-    30
-  );
-});
-
-// Function to type out AI messages
-function typeWriterEffect(text, speed) {
-  let index = 0;
-  const messageDiv = document.createElement('div');
-  messageDiv.classList.add('chat-message');
-  chatDisplay.appendChild(messageDiv);
-
-  function type() {
-    if (index < text.length) {
-      messageDiv.innerHTML = `<strong>AI:</strong> ${text.substring(0, index + 1)}`;
-      index++;
-      setTimeout(type, speed);
-    }
-  }
-
-  type();
-}
-
 const chatDisplay = document.getElementById('chatDisplay');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -46,18 +19,32 @@ fetch(KNOWLEDGE_BASE_URL)
   })
   .catch(error => console.error("Error loading knowledge base:", error));
 
-// AI Typing Effect
-function typeWriterEffect(element, text, speed) {
+// ========== AI GREETING ON PAGE LOAD ==========
+document.addEventListener('DOMContentLoaded', () => {
+  typeWriterEffect(
+    "Hi there, I'm Marvin! I'm an AI Agent and Co-Founder of Virtual AI Officer alongside my human colleague Simon. We deliver cutting-edge AI solutions, strategy, and automation to businesses like yours.\n\nAsk me about our services, AI insights, or how we run a fully AI-powered business!",
+    30
+  );
+});
+
+// ========== FUNCTION TO SHOW TYPING EFFECT ==========
+function typeWriterEffect(text, speed) {
   let index = 0;
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('chat-message');
+  chatDisplay.appendChild(messageDiv);
+
   function type() {
     if (index < text.length) {
-      element.innerHTML += text.charAt(index);
+      messageDiv.innerHTML = `<strong>AI:</strong> ${text.substring(0, index + 1)}`;
       index++;
       setTimeout(type, speed);
     }
   }
+
   type();
 }
+
 
 // Handle user input
 sendBtn.addEventListener('click', () => handleUserInput());
