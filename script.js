@@ -8,7 +8,7 @@ const prompts = document.getElementById('promptSuggestions').querySelectorAll('.
 // Hugging Face API Key (Store securely in a backend for production)
 const HF_API_KEY = "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";
 const MODEL = "mistralai/Mistral-7B-Instruct";  // You can change the model if needed
-const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/yourusername/virtualaiofficer-site/main/knowledge_base.md";
+const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
 
 // Load the knowledge base document
 let knowledgeBaseText = "";
