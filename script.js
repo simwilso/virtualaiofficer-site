@@ -1,45 +1,43 @@
 // script.js
 
-// ========== SELECTORS ==========
 const chatDisplay = document.getElementById('chatDisplay');
-const userInput   = document.getElementById('userInput');
-const sendBtn     = document.getElementById('sendBtn');
-const prompts     = document.getElementById('promptSuggestions').querySelectorAll('.prompt-suggestion');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const prompts = document.getElementById('promptSuggestions').querySelectorAll('.prompt-suggestion');
 
-// ========== GREETING ON PAGE LOAD (WITH TYPEWRITER EFFECT) ==========
-document.addEventListener('DOMContentLoaded', () => {
-  typeWriterEffect("Hi there, I'm Marvin—AI agent and Co-Founder of VirtualAIOfficer.com.au!\nAlongside my human Co-Founder, Simon, and our army of AI agents, we're leading the AI Agent revolution—delivering products, services, education, and strategy to businesses like yours.\nAt VirtualAIOfficer, we don’t just talk AI—we build, code, and run our business with it, 24/7. Our team? Hardcore tech veterans who know what works (and what doesn’t) from real experience.\nAI is about to change everything in business, and our mission is to help Aussie companies adopt it safely and effectively.\n\r👉 Book a call with one of our humans to explore how AI can save you time, effort, and money.\nOr hang out and chat with me—ask about our team, services, projects, or vision. I'm here 24/7!\nP.S. Why the retro look? This site is 100% AI-run, built, and maintained. Plus, we love tech history. What do you think?", 50);
-});
+// Hugging Face API Key (Store securely in a backend for production)
+const HF_API_KEY = "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";
+const MODEL = "mistralai/Mistral-7B-Instruct";  // You can change the model if needed
+const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/yourusername/virtualaiofficer-site/main/knowledge_base.md";
 
-// ========== TYPEWRITER EFFECT ==========
-function typeWriterEffect(text, speed) {
+// Load the knowledge base document
+let knowledgeBaseText = "";
+
+fetch(KNOWLEDGE_BASE_URL)
+  .then(response => response.text())
+  .then(text => {
+    knowledgeBaseText = text;
+  })
+  .catch(error => console.error("Error loading knowledge base:", error));
+
+// AI Typing Effect
+function typeWriterEffect(element, text, speed) {
   let index = 0;
-  const messageDiv = document.createElement('div');
-  messageDiv.classList.add('chat-message');
-  chatDisplay.appendChild(messageDiv);
-
   function type() {
     if (index < text.length) {
-      messageDiv.innerHTML = `<strong>AI:</strong> ${text.substring(0, index + 1)}`;
+      element.innerHTML += text.charAt(index);
       index++;
       setTimeout(type, speed);
     }
   }
-
   type();
 }
 
-// ========== EVENT LISTENERS ==========
-
-// 1) Click on "Send" button
+// Handle user input
 sendBtn.addEventListener('click', () => handleUserInput());
-
-// 2) Press "Enter" in the input
 userInput.addEventListener('keyup', (e) => {
   if (e.key === 'Enter') handleUserInput();
 });
-
-// 3) Click on a prompt suggestion
 prompts.forEach(promptEl => {
   promptEl.addEventListener('click', () => {
     userInput.value = promptEl.textContent;
@@ -47,7 +45,6 @@ prompts.forEach(promptEl => {
   });
 });
 
-// ========== HANDLE USER INPUT ==========
 function handleUserInput() {
   const text = userInput.value.trim();
   if (!text) return;
@@ -55,36 +52,39 @@ function handleUserInput() {
   addMessage('User', text);
   userInput.value = '';
 
-  setTimeout(() => {
-    const aiReply = generateAIResponse(text);
-    addMessage('AI', aiReply);
-  }, 800);
+  fetchAIResponse(text);
 }
 
-// ========== ADD MESSAGE TO DISPLAY ==========
+// Display messages
 function addMessage(sender, text) {
   const msgDiv = document.createElement('div');
   msgDiv.classList.add('chat-message');
-  msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+  msgDiv.innerHTML = `<strong>${sender}:</strong> `;
   chatDisplay.appendChild(msgDiv);
+
+  typeWriterEffect(msgDiv, text, 30);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
-// ========== FAKE AI RESPONSE LOGIC ==========
-function generateAIResponse(userQuery) {
-  const lowerQuery = userQuery.toLowerCase();
+// Fetch AI response
+async function fetchAIResponse(userQuery) {
+  const systemMessage = `You are an AI assistant for Virtual AI Officer. Use the following knowledge base to answer user queries:\n\n${knowledgeBaseText}`;
 
-  if (lowerQuery.includes('services')) {
-    return "I offer AI consulting, product strategy, and future tech analysis. How can I help you today?";
-  } else if (lowerQuery.includes('impact')) {
-    return "AI is revolutionizing every industry. Let's explore how it can optimize your business.";
-  } else if (lowerQuery.includes('who are you')) {
-    return "I'm your virtual AI officer—here to guide you through cutting-edge tech and help you build the future.";
-  } else if (lowerQuery.includes('projects')) {
-    return "I'm working on AI-driven chatbots, automated business tooling, and generative content solutions.";
-  } else if (lowerQuery.includes('tutorials') || lowerQuery.includes('videos')) {
-    return "Check out my YouTube channel for step-by-step guides on building AI-driven businesses!";
-  } else {
-    return "Interesting question! Let's talk further or book a meeting to dive deeper.";
-  }
+  const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${HF_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      inputs: `${systemMessage}\n\nUser: ${userQuery}\nAI:`,
+      parameters: { max_new_tokens: 100, temperature: 0.7 }
+    })
+  });
+
+  const data = await response.json();
+  const aiReply = data[0]?.generated_text || "Sorry, I couldn't process that.";
+
+  addMessage('AI', aiReply);
 }
+
