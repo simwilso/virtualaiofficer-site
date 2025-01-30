@@ -4,10 +4,12 @@ const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const prompts = document.getElementById('promptSuggestions').querySelectorAll('.prompt-suggestion');
 
-// Hugging Face API Key (Store securely in a backend for production)
-const HF_API_KEY = "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";
-const MODEL = "tiiuae/falcon-7b-instruct";  // You can change the model if needed
-const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
+// GitHub Actions API Proxy (replace with your GitHub details)
+const GITHUB_PROXY_URL = "https://api.github.com/repos/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/dispatches";
+const GITHUB_PAT = "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN"; // Secure GitHub API token
+
+// Knowledge Base URL (store in GitHub repo)
+const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/knowledge_base.md";
 
 // Load the knowledge base document
 let knowledgeBaseText = "";
@@ -21,15 +23,14 @@ fetch(KNOWLEDGE_BASE_URL)
 
 // ========== AI GREETING ON PAGE LOAD ==========
 document.addEventListener('DOMContentLoaded', () => {
-  // Create a new chat message div for the AI greeting
   const introMessageDiv = document.createElement('div');
   introMessageDiv.classList.add('chat-message');
   chatDisplay.appendChild(introMessageDiv);
 
   typeWriterEffect(
-    "Hey there, I’m Marvin—your AI agent and Co-Founder of VirtualAIOfficer.com.au! I work alongside my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—offering AI-powered products, strategy, education, and automation. What makes us different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, and as tech veterans and business owners, we know what works (and what doesn’t) from real-world experience. AI is changing everything. Our mission? To help Aussie businesses harness its power safely and effectively. Book a call with one of our humans, and let’s find ways to automate, streamline, and scale your business today. Or just chat with me! Ask about our team, our projects, or anything AI—I’m here 24/7 at your service. P.S. Why the retro look? This site is 100% AI-run, and we like honoring our roots in tech!",
+    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! I work with my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—We offer AI products, strategy, education, automation and advice. How are we different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, including management of this site! We are tech veterans and business owners, we know what works (and what doesn’t) from real-world experience and we know how AI can and will change everything. Our mission is to help Aussie businesses like you ride this wave safely and win! So Book a call or just chat with me and ask about our team, our projects, or anything AI—I’m here 24/7 at your service. P.S. Do you like the retro look? Well this site is 100% AI-designed and run, and we felt like honoring our roots in tech! :)",
     30,
-    introMessageDiv  // Ensure the typing effect knows where to insert the text
+    introMessageDiv
   );
 });
 
@@ -46,10 +47,10 @@ function typeWriterEffect(text, speed, element) {
     if (index < text.length) {
       element.innerHTML = `<strong>AI:</strong> ${text.substring(0, index + 1)}`;
       index++;
-      chatDisplay.scrollTop = chatDisplay.scrollHeight; // Ensure scrolling happens as text is typed
+      chatDisplay.scrollTop = chatDisplay.scrollHeight; 
       setTimeout(type, speed);
     } else {
-      chatDisplay.scrollTop = chatDisplay.scrollHeight; // Final scroll to ensure visibility
+      chatDisplay.scrollTop = chatDisplay.scrollHeight; 
     }
   }
 
@@ -85,18 +86,19 @@ function addMessage(sender, text, applyTypingEffect = false) {
   chatDisplay.appendChild(msgDiv);
 
   if (applyTypingEffect) {
-    typeWriterEffect(text, 30, msgDiv); // AI messages use typing effect
+    typeWriterEffect(text, 30, msgDiv); 
   } else {
-    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`; // User messages appear instantly
-    chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`; 
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
   }
 }
 
-// ========== FETCH AI RESPONSE ==========
+// ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
+  // Construct system message with knowledge base
   const systemMessage = `
   You are Marvin, a co founder of Virtual AI Officer who you represent. Your job is to answer user questions **ONLY using the provided knowledge base**.
-  
+ 
   **Rules for answering:**
   - **DO NOT generate information from your own knowledge**—only use the knowledge base below.
   - If the answer is **not in the knowledge base**, reply: "I'm not sure, but my team is always updating me! or you can Book a Call"
@@ -106,58 +108,76 @@ async function fetchAIResponse(userQuery) {
   - **Only comment on questions related to business, or AI. Politely decline to comment on other topics.**
   - **When finished, say 'END RESPONSE'.**
 
+
   === KNOWLEDGE BASE START ===
   ${knowledgeBaseText}
   === KNOWLEDGE BASE END ===
 
+
   **User Question:** ${userQuery}
 
+
   **Provide an answer strictly based on the knowledge base. If necessary, infer the closest possible AI solution. Do not include unrelated details.**
-  
+ 
   BEGIN RESPONSE:
 `;
 
+  try {
+    // Send request to GitHub Actions API Proxy
+    const response = await fetch(GITHUB_PROXY_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GITHUB_PAT}`,  
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        event_type: "query-ai",
+        client_payload: { user_query: systemMessage }
+      })
+    });
 
+    if (response.ok) {
+      console.log("Query sent to GitHub Actions, waiting for response...");
 
-  const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${HF_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      inputs: systemMessage,
-      parameters: { 
-        max_new_tokens: 350,  
-        temperature: 0.1,  // Slight randomness to improve extraction accuracy
-        top_p: 0.6,  // Ensures the AI picks the best knowledge-based answer
-        repetition_penalty: 1.8, // Slightly relaxed to allow AI to reference content better
-        stop: ["END RESPONSE", "BEGIN RESPONSE:", "=== KNOWLEDGE BASE START ==="]  
-    }                    
-    })
-  });
+      // Wait before retrieving response from GitHub Actions artifact
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
-  const data = await response.json();
-  console.log("Raw API Response:", data);
+      const artifactResponse = await fetch(`https://api.github.com/repos/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/actions/artifacts`, {
+        headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+      });
 
-  // Extract AI's response correctly
-  let aiReply = data[0]?.generated_text || "I couldn't process that. Try again!";
-  console.log("Raw AI Output:", aiReply); // Debugging log
-  
-  // Extract only the AI-generated response
-  if (aiReply.includes("BEGIN RESPONSE:")) {
-    aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
+      const artifactData = await artifactResponse.json();
+
+      if (artifactData.artifacts && artifactData.artifacts.length > 0) {
+        const artifactURL = artifactData.artifacts[0].archive_download_url;
+
+        const aiResponse = await fetch(artifactURL, {
+          headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+        });
+
+        const jsonData = await aiResponse.json();
+        console.log("AI Response:", jsonData);
+        
+        let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
+
+        // Extract only AI-generated response
+        if (aiReply.includes("BEGIN RESPONSE:")) {
+          aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
+        }
+        if (aiReply.includes("END RESPONSE")) {
+          aiReply = aiReply.split("END RESPONSE")[0]?.trim();
+        }
+
+        addMessage('AI', aiReply, true);
+      } else {
+        addMessage('AI', "I couldn't process that. Try again!", true);
+      }
+    } else {
+      console.error("Failed to send request to GitHub Actions.");
+    }
+  } catch (error) {
+    console.error("Error fetching AI response:", error);
+    addMessage('AI', "An error occurred. Please try again later.", true);
   }
-
-  if (aiReply.includes("END RESPONSE")) {
-      aiReply = aiReply.split("END RESPONSE")[0]?.trim();
-  }
-
-  // Ensure AI pulls relevant information from the knowledge base
-  if (aiReply.length < 20) {
-      aiReply = "I couldn't find a direct answer, but Virtual AI Officer provides AI-driven automation, AI consulting, and AI-powered business solutions.";
-  }
-
-  addMessage('AI', aiReply, true);   
-    
 }

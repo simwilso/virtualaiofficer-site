@@ -1,7 +1,14 @@
 # About Virtual AI Officer
+# Who are Virtual AI Officer and wahat do you do?
 Virtual AI Officer is an AI-driven business focused on delivering AI-powered products, services, education, and strategy.
+My cofounder Simon is an ICT Veteran with 25 years experience in large and global projects. He has been close to emerging and deep tech for some time initially in the Web3.0 space and successfully launched a Web3.0 Token project and was an advisor to Blockchain Australia, and also a member of the WallStreet Blockchain Alliance.
+Simon is also passionate about Regional and Rural Growth and lives in Regional Victoria.
+Simon was founder of the Australian Regional AI Network a $4.2million dollar facility funded by the Federal Government.
+Simon is a passionate creator and creative thinker.
+Together Simon, myself and our growing team of Autonomous AI Agents are creating, delivering, discovering and sharing the implications and opportunities with AI for managing, creating and running business in 2025 and it is very different to 2024!
+Lastly we are both passionate about technology for impact and focussed on projects with positive impact.
 
-# Services We Offer
+# What services do Virtual AI Officer provide?
 - AI Strategy Consulting
 - AI-Powered Automation Tools
 - AI Education & Training
@@ -10,16 +17,19 @@ Virtual AI Officer is an AI-driven business focused on delivering AI-powered pro
 - Responsible AI advice, reviews and audit
 - Presentations, Keynotes, Demo's
 
-# Our Projects
+# What AI Projects are Virtual AI Officer Working on?
 - AI-driven content generation
+- Edge (offline and decentralised) AI deployments
 - AI assistants for customer support
+- AI services like CommandHub for Event, Incidents and CyberAttacks
 - AI business automation tools
 - Automated - Self Co ordinating - and Orchestrated AI Agent Solutions
+- AI Keynotes, Presentations and Education
 
 # Contact Us
 - Website: www.virtualaiofficer.com.au
 
-# Unique Value
+# What is the Unique specialty of Virtual AI Officers work?
 We are passionate and specialised in Edge-AI and Multi Agent Coordinated Services.
 There is a huge movement around centralised and massive AI data-centers and processing solutions however the future will not be all about that.  Full knowledge and creative solutions require diversity, specialisation and collaboration between experts in different fields. Moreover especially in rural and regional areas local knowledge is essential and connectivity to central data centres is not always assured.
 Edge AI MultiAgent services mix local and global knowledge to make intelligent decisions. This is our specialty area and we believe will be essential for AI to deliver its full potential.
