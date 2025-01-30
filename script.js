@@ -69,23 +69,16 @@ function addMessage(sender, text) {
 // Fetch AI response
 async function fetchAIResponse(userQuery) {
   const systemMessage = `
-  You are Marvin, an AI agent and co-founder of Virtual AI Officer. 
-  Your job is to answer user questions **based on the following knowledge base**:
-  
-  === KNOWLEDGE BASE START ===
+  You are Marvin, an AI assistant for Virtual AI Officer. Answer user questions based on the following knowledge base. 
+  Do NOT repeat the entire knowledge base in your responses. Only extract relevant information.
+
+  ---
+  # Knowledge Base:
   ${knowledgeBaseText}
-  === KNOWLEDGE BASE END ===
+  ---
 
-  When answering:
-  - **DO NOT** repeat the full knowledge base.
-  - **ONLY** provide relevant answers based on the user's question.
-  - If unsure, say: "I don't know the answer to that yet, but my team is always updating me!"
-  - Keep responses short and professional unless more detail is required.
-
-  Now, answer the following user question:
-  
-  **User:** ${userQuery}
-  **Marvin:**`;
+  **User Question:** ${userQuery}
+  **Answer:**`;
 
   const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
     method: "POST",
@@ -95,15 +88,17 @@ async function fetchAIResponse(userQuery) {
     },
     body: JSON.stringify({
       inputs: systemMessage,
-      parameters: { max_new_tokens: 150, temperature: 0.6 }
+      parameters: { max_new_tokens: 200, temperature: 0.6 }
     })
   });
 
   const data = await response.json();
   console.log("API Response:", data);
 
-  const aiReply = data[0]?.generated_text || "I couldn't process that. Try again!";
+  // Extract AI's response correctly
+  const aiReply = data[0]?.generated_text?.split("**Answer:**")?.[1]?.trim() || "I couldn't process that. Try again!";
   addMessage('AI', aiReply);
 }
+
 
 
