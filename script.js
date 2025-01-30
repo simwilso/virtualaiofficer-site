@@ -6,7 +6,7 @@ const prompts = document.getElementById('promptSuggestions').querySelectorAll('.
 
 // GitHub Actions API Proxy (replace with your GitHub details)
 const GITHUB_PROXY_URL = "https://api.github.com/repos/simwilso/virtualaiofficer-site/dispatches";
-//const GITHUB_SECRET_NAME = "GH_PAT_AI"; // Must match the GitHub Secret Name
+const GITHUB_SECRET_NAME = "GH_PAT_AI"; // Must match the GitHub Secret Name
 
 // Knowledge Base URL (stored in GitHub repo)
 const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
