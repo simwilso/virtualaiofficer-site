@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   chatDisplay.appendChild(introMessageDiv);
 
   typeWriterEffect(
-    "Hi there, I'm Marvin! I'm an AI Agent and Co-Founder of Virtual AI Officer alongside my human colleague Simon. We deliver cutting-edge AI solutions, strategy, and automation to businesses like yours.\n\nAsk me about our services, AI insights, or how we run a fully AI-powered business!",
+    "Hey there, I’m Marvin—your AI agent and Co-Founder of VirtualAIOfficer.com.au! I work alongside my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—offering AI-powered products, strategy, education, and automation. What makes us different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, and as tech veterans and business owners, we know what works (and what doesn’t) from real-world experience. AI is changing everything. Our mission? To help Aussie businesses harness its power safely and effectively. Book a call with one of our humans, and let’s find ways to automate, streamline, and scale your business today. Or just chat with me! Ask about our team, our projects, or anything AI—I’m here 24/7 at your service. P.S. Why the retro look? This site is 100% AI-run, and we like honoring our roots in tech!",
     30,
     introMessageDiv  // Ensure the typing effect knows where to insert the text
   );
@@ -95,12 +95,16 @@ function addMessage(sender, text, applyTypingEffect = false) {
 // ========== FETCH AI RESPONSE ==========
 async function fetchAIResponse(userQuery) {
   const systemMessage = `
-  You are Marvin, an AI assistant for Virtual AI Officer.
-  - Answer questions **ONLY using the knowledge base** provided below.
-  - **DO NOT repeat the knowledge base text** in your response.
-  - **ONLY extract relevant details** related to the user’s query.
-  - If you don’t know the answer, say: "I'm not sure, but my team is always updating me!"
-  - Keep responses **concise and professional**.
+  You are Marvin, a co founder of Virtual AI Officer who you represent. Your job is to answer user questions **ONLY using the provided knowledge base**.
+  
+  **Rules for answering:**
+  - **DO NOT generate information from your own knowledge**—only use the knowledge base below.
+  - If the answer is **not in the knowledge base**, reply: "I'm not sure, but my team is always updating me! or you can Book a Call"
+  - **DO NOT assume solutions—only reference documented AI solutions in the knowledge base.**
+  - **If an exact match isn't found, infer the closest possible AI solutions based on available knowledge.**
+  - **Summarize rather than listing too many solutions.**
+  - **Only comment on questions related to business, or AI. Politely decline to comment on other topics.**
+  - **When finished, say 'END RESPONSE'.**
 
   === KNOWLEDGE BASE START ===
   ${knowledgeBaseText}
@@ -108,8 +112,12 @@ async function fetchAIResponse(userQuery) {
 
   **User Question:** ${userQuery}
 
+  **Provide an answer strictly based on the knowledge base. If necessary, infer the closest possible AI solution. Do not include unrelated details.**
+  
   BEGIN RESPONSE:
-  `;
+`;
+
+
 
   const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
     method: "POST",
@@ -120,12 +128,12 @@ async function fetchAIResponse(userQuery) {
     body: JSON.stringify({
       inputs: systemMessage,
       parameters: { 
-        max_new_tokens: 150,  // Slightly shorter responses
-        temperature: 0.1,  // Reduce randomness
-        top_p: 0.5,  // Prioritize most likely words
-        repetition_penalty: 1.5, // Stronger penalty for repeated phrases
-        stop: ["\n\n", "=== KNOWLEDGE BASE START ===", "BEGIN RESPONSE:"]  // Force AI to stop early
-    }         
+        max_new_tokens: 350,  
+        temperature: 0.1,  // Slight randomness to improve extraction accuracy
+        top_p: 0.6,  // Ensures the AI picks the best knowledge-based answer
+        repetition_penalty: 1.8, // Slightly relaxed to allow AI to reference content better
+        stop: ["END RESPONSE", "BEGIN RESPONSE:", "=== KNOWLEDGE BASE START ==="]  
+    }                    
     })
   });
 
@@ -136,16 +144,20 @@ async function fetchAIResponse(userQuery) {
   let aiReply = data[0]?.generated_text || "I couldn't process that. Try again!";
   console.log("Raw AI Output:", aiReply); // Debugging log
   
-  // Remove instructions or repeated knowledge base references
+  // Extract only the AI-generated response
   if (aiReply.includes("BEGIN RESPONSE:")) {
-      aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
-  } else if (aiReply.includes(userQuery)) {
-      aiReply = aiReply.replace(userQuery, "").trim(); // Remove echoed query
+    aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
   }
-  
-  // Remove any excessive whitespace or formatting issues
-  aiReply = aiReply.replace(/\s+/g, " ").trim();
-  
-  addMessage('AI', aiReply, true);  
+
+  if (aiReply.includes("END RESPONSE")) {
+      aiReply = aiReply.split("END RESPONSE")[0]?.trim();
+  }
+
+  // Ensure AI pulls relevant information from the knowledge base
+  if (aiReply.length < 20) {
+      aiReply = "I couldn't find a direct answer, but Virtual AI Officer provides AI-driven automation, AI consulting, and AI-powered business solutions.";
+  }
+
+  addMessage('AI', aiReply, true);   
     
 }
