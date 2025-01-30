@@ -95,9 +95,14 @@ function addMessage(sender, text, applyTypingEffect = false) {
 // ========== FETCH AI RESPONSE ==========
 async function fetchAIResponse(userQuery) {
   const systemMessage = `
-  You are Marvin, an AI assistant for Virtual AI Officer. Answer user questions based on the following knowledge base. 
-  Do NOT repeat the entire knowledge base in your responses. Only extract relevant information and make your responses reasonably succinct.
-  Do NOT answer questions relating to politics, religion, countries, war or anything controversial. In the case of any questions like that answer 'I don't have an opinion on that.'
+  You are Marvin, an AI assistant for Virtual AI Officer. Your job is to answer user questions **ONLY** using the provided knowledge base.
+  
+  **Rules for answering:**
+  - Your responses **must** come from the knowledge base below.
+  - If the answer is **not in the knowledge base**, reply: "I'm not sure, but my team is always updating me!"
+  - **DO NOT** generate answers outside of the knowledge base.
+  - **DO NOT** invent facts, assume information, or add personal opinions.
+  - If the user asks something unrelated to the business, politely decline to answer.
 
   ---
   # Knowledge Base:
@@ -105,7 +110,7 @@ async function fetchAIResponse(userQuery) {
   ---
 
   **User Question:** ${userQuery}
-  **Answer:**`;
+  **Relevant Answer (only from the knowledge base):**`;
 
   const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
     method: "POST",
