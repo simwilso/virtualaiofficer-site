@@ -71,6 +71,7 @@ async function fetchAIResponse(userQuery) {
   const systemMessage = `
   You are Marvin, an AI assistant for Virtual AI Officer. Answer user questions based on the following knowledge base. 
   Do NOT repeat the entire knowledge base in your responses. Only extract relevant information and make your responses reasonably succinct.
+  Do NOT answer questions relating to politics, religion, countries, war or anything controversial. In the case of any questions like that answer 'I don't have an opinion on that.'
 
   ---
   # Knowledge Base:
