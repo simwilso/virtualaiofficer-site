@@ -68,13 +68,18 @@ function handleUserInput() {
 }
 
 // ========== FUNCTION TO DISPLAY CHAT MESSAGES ==========
-function addMessage(sender, text) {
+function addMessage(sender, text, applyTypingEffect = false) {
   const msgDiv = document.createElement('div');
   msgDiv.classList.add('chat-message');
   msgDiv.innerHTML = `<strong>${sender}:</strong> `;
   chatDisplay.appendChild(msgDiv);
 
-  typeWriterEffect(text, 30);
+  if (applyTypingEffect) {
+    typeWriterEffect(text, 30, msgDiv);
+  } else {
+    msgDiv.innerHTML += text;  // Immediately show user input
+  }
+
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
