@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual AI Officer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Import multiple fonts: Press Start 2P (for headings), Share Tech Mono (for chat) -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- Link to our CSS file -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="VAIOLogo.png">
+</head>
+<body>
+
+  <!-- TOP BAR / HEADER -->
+  <header class="top-bar">
+    <!-- LOGO placeholder -->
+    <div class="logo">
+      <img src="VAIOLogo.png" alt="Virtual AI Officer Logo">
+    </div>
+    
+    
+    <!-- SOCIAL LINKS (HORIZONTAL) -->
+    <nav class="social-links">
+      <a href="https://x.com/simwilso" target="_blank">Twitter</a>
+      <a href="https://www.linkedin.com/in/simon-wilson-a3a70a3" target="_blank">LinkedIn</a>
+      <a href="https://www.youtube.com/channel/UCxhG3bcP7BX_rYDvgg-PSyQ" target="_blank">YouTube</a>
+    </nav>
+
+    <!-- BOOK A MEETING BUTTON (TOP RIGHT) -->
+    <a 
+      href="https://calendly.com/simon-vru/60min"
+      target="_blank" 
+      class="book-meeting-btn"
+    >
+      Book a Meeting
+    </a>
+  </header>
+
+  <!-- MAIN CHAT CONTAINER / HERO -->
+  <div class="chat-container">
+    <!-- TITLE with extra bottom margin -->
+    <div class="chat-title">Meet your Virtual AI Officer</div>
+
+<!-- CHAT DISPLAY -->
+<div class="chat-display" id="chatDisplay"></div>
+
+<!-- PROMPT SUGGESTIONS -->
+<div class="prompt-suggestions" id="promptSuggestions">
+  <div class="prompt-suggestion">What services do Virtual AI Officer provide?</div>
+  <div class="prompt-suggestion">How will AI impact me?</div>
+  <div class="prompt-suggestion">Who are you and what do you do?</div>
+  <div class="prompt-suggestion">What AI projects are you working on?</div>
+</div>
+
+<!-- CHAT INPUT -->
+<div class="chat-input-container">
+  <input type="text" class="chat-input" id="userInput" placeholder="Ask me anything..." />
+  <button class="chat-send-btn" id="sendBtn">Send</button>
+</div>
+
+
+  <!-- Link to JS -->
+  <script src="script.js"></script>
+</body>
+</html>
