@@ -28,17 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========== FUNCTION TO SHOW TYPING EFFECT ==========
-function typeWriterEffect(text, speed) {
+function typeWriterEffect(text, speed, element) {
   let index = 0;
-  const messageDiv = document.createElement('div');
-  messageDiv.classList.add('chat-message');
-  chatDisplay.appendChild(messageDiv);
 
   function type() {
     if (index < text.length) {
-      messageDiv.innerHTML = `<strong>AI:</strong> ${text.substring(0, index + 1)}`;
+      element.innerHTML = `<strong>AI:</strong> ${text.substring(0, index + 1)}`;
       index++;
+      chatDisplay.scrollTop = chatDisplay.scrollHeight; // Ensure scrolling happens as text is typed
       setTimeout(type, speed);
+    } else {
+      chatDisplay.scrollTop = chatDisplay.scrollHeight; // Final scroll to ensure visibility
     }
   }
 
