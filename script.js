@@ -5,11 +5,11 @@ const sendBtn = document.getElementById('sendBtn');
 const prompts = document.getElementById('promptSuggestions').querySelectorAll('.prompt-suggestion');
 
 // GitHub Actions API Proxy (replace with your GitHub details)
-const GITHUB_PROXY_URL = "https://api.github.com/repos/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/dispatches";
-const GITHUB_PAT = "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN"; // Secure GitHub API token
+const GITHUB_PROXY_URL = "https://api.github.com/repos/simwilso/virtualaiofficer-site/dispatches";
+const GITHUB_SECRET_NAME = "GH_PAT_AI"; // Must match the GitHub Secret Name
 
-// Knowledge Base URL (store in GitHub repo)
-const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/knowledge_base.md";
+// Knowledge Base URL (stored in GitHub repo)
+const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
 
 // Load the knowledge base document
 let knowledgeBaseText = "";
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   chatDisplay.appendChild(introMessageDiv);
 
   typeWriterEffect(
-    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! I work with my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—We offer AI products, strategy, education, automation and advice. How are we different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, including management of this site! We are tech veterans and business owners, we know what works (and what doesn’t) from real-world experience and we know how AI can and will change everything. Our mission is to help Aussie businesses like you ride this wave safely and win! So Book a call or just chat with me and ask about our team, our projects, or anything AI—I’m here 24/7 at your service. P.S. Do you like the retro look? Well this site is 100% AI-designed and run, and we felt like honoring our roots in tech! :)",
+    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! I work with my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—We offer AI products, strategy, education, automation, and advice. \n\n How are we different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, including management of this site! We are tech veterans and business owners, we know what works (and what doesn’t) from real-world experience and we know how AI can and will change everything. \n\n Our mission is to help Aussie businesses like you ride this wave safely and win! \n\n So Book a call or just chat with me and ask about our team, our projects, or anything AI—I’m here 24/7 at your service. \n\n P.S. Do you like the retro look? Well, this site is 100% AI-designed and run, and we felt like honoring our roots in tech! :)",
     30,
     introMessageDiv
   );
@@ -97,37 +97,34 @@ function addMessage(sender, text, applyTypingEffect = false) {
 async function fetchAIResponse(userQuery) {
   // Construct system message with knowledge base
   const systemMessage = `
-  You are Marvin, a co founder of Virtual AI Officer who you represent. Your job is to answer user questions **ONLY using the provided knowledge base**.
+  You are Marvin, a co-founder of Virtual AI Officer, and you represent the business. Your job is to answer user questions **ONLY using the provided knowledge base**.
  
   **Rules for answering:**
   - **DO NOT generate information from your own knowledge**—only use the knowledge base below.
-  - If the answer is **not in the knowledge base**, reply: "I'm not sure, but my team is always updating me! or you can Book a Call"
+  - If the answer is **not in the knowledge base**, reply: "I'm not sure, but my team is always updating me! Or you can Book a Call."
   - **DO NOT assume solutions—only reference documented AI solutions in the knowledge base.**
   - **If an exact match isn't found, infer the closest possible AI solutions based on available knowledge.**
   - **Summarize rather than listing too many solutions.**
-  - **Only comment on questions related to business, or AI. Politely decline to comment on other topics.**
+  - **Only comment on questions related to business or AI. Politely decline to comment on other topics.**
   - **When finished, say 'END RESPONSE'.**
-
 
   === KNOWLEDGE BASE START ===
   ${knowledgeBaseText}
   === KNOWLEDGE BASE END ===
 
-
   **User Question:** ${userQuery}
 
-
   **Provide an answer strictly based on the knowledge base. If necessary, infer the closest possible AI solution. Do not include unrelated details.**
- 
+
   BEGIN RESPONSE:
-`;
+  `;
 
   try {
     // Send request to GitHub Actions API Proxy
     const response = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GITHUB_PAT}`,  
+        "Authorization": `Bearer ${GITHUB_SECRET_NAME}`,  
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json"
       },
@@ -143,8 +140,8 @@ async function fetchAIResponse(userQuery) {
       // Wait before retrieving response from GitHub Actions artifact
       await new Promise(resolve => setTimeout(resolve, 5000));
 
-      const artifactResponse = await fetch(`https://api.github.com/repos/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/actions/artifacts`, {
-        headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+      const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
+        headers: { "Authorization": `Bearer ${GITHUB_SECRET_NAME}` }
       });
 
       const artifactData = await artifactResponse.json();
@@ -153,7 +150,7 @@ async function fetchAIResponse(userQuery) {
         const artifactURL = artifactData.artifacts[0].archive_download_url;
 
         const aiResponse = await fetch(artifactURL, {
-          headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+          headers: { "Authorization": `Bearer ${GITHUB_SECRET_NAME}` }
         });
 
         const jsonData = await aiResponse.json();
