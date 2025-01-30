@@ -124,5 +124,5 @@ async function fetchAIResponse(userQuery) {
 
   // Extract AI's response correctly
   const aiReply = data[0]?.generated_text?.split("**Answer:**")?.[1]?.trim() || "I couldn't process that. Try again!";
-  addMessage('AI', aiReply);
+  addMessage('AI', aiReply, true);
 }
