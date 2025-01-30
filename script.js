@@ -97,17 +97,19 @@ async function fetchAIResponse(userQuery) {
   const systemMessage = `
   You are Marvin, an AI assistant for Virtual AI Officer.
   - Answer questions **ONLY using the knowledge base** provided below.
-  - **DO NOT repeat the entire knowledge base** in your response.
-  - **Extract only the most relevant parts** of the knowledge base related to the user's question.
-  - If the knowledge base **does not contain an answer**, say: "I'm not sure, but my team is always updating me!"
+  - **DO NOT repeat the knowledge base text** in your response.
+  - **ONLY extract relevant details** related to the user’s query.
+  - If you don’t know the answer, say: "I'm not sure, but my team is always updating me!"
+  - Keep responses **concise and professional**.
 
   === KNOWLEDGE BASE START ===
   ${knowledgeBaseText}
   === KNOWLEDGE BASE END ===
 
   **User Question:** ${userQuery}
-  
-  Provide a relevant and concise answer (DO NOT include the knowledge base text itself):`;
+
+  BEGIN RESPONSE:
+  `;
 
   const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
     method: "POST",
@@ -118,12 +120,12 @@ async function fetchAIResponse(userQuery) {
     body: JSON.stringify({
       inputs: systemMessage,
       parameters: { 
-        max_new_tokens: 200, 
-        temperature: 0.1,  // Reduce randomness (AI should follow rules strictly)
-        top_p: 0.6,  // Prioritize high-confidence words
-        repetition_penalty: 1.4, // Stronger penalty for repeated phrases
-        stop: ["\n\n", "=== KNOWLEDGE BASE START ==="]  // Prevent AI from including full knowledge base in responses
-    }       
+        max_new_tokens: 150,  // Slightly shorter responses
+        temperature: 0.1,  // Reduce randomness
+        top_p: 0.5,  // Prioritize most likely words
+        repetition_penalty: 1.5, // Stronger penalty for repeated phrases
+        stop: ["\n\n", "=== KNOWLEDGE BASE START ===", "BEGIN RESPONSE:"]  // Force AI to stop early
+    }         
     })
   });
 
@@ -135,14 +137,14 @@ async function fetchAIResponse(userQuery) {
   console.log("Raw AI Output:", aiReply); // Debugging log
   
   // Remove instructions or repeated knowledge base references
-  if (aiReply.includes("=== KNOWLEDGE BASE START ===")) {
-      aiReply = aiReply.split("=== KNOWLEDGE BASE START ===")[0].trim();
+  if (aiReply.includes("BEGIN RESPONSE:")) {
+      aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
+  } else if (aiReply.includes(userQuery)) {
+      aiReply = aiReply.replace(userQuery, "").trim(); // Remove echoed query
   }
   
-  // Ensure AI doesn’t just repeat the whole knowledge base
-  if (aiReply.length > 500) {
-      aiReply = aiReply.substring(0, 500) + "...";
-  }
+  // Remove any excessive whitespace or formatting issues
+  aiReply = aiReply.replace(/\s+/g, " ").trim();
   
   addMessage('AI', aiReply, true);  
     
