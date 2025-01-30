@@ -21,14 +21,25 @@ fetch(KNOWLEDGE_BASE_URL)
 
 // ========== AI GREETING ON PAGE LOAD ==========
 document.addEventListener('DOMContentLoaded', () => {
+  // Create a new chat message div for the AI greeting
+  const introMessageDiv = document.createElement('div');
+  introMessageDiv.classList.add('chat-message');
+  chatDisplay.appendChild(introMessageDiv);
+
   typeWriterEffect(
     "Hi there, I'm Marvin! I'm an AI Agent and Co-Founder of Virtual AI Officer alongside my human colleague Simon. We deliver cutting-edge AI solutions, strategy, and automation to businesses like yours.\n\nAsk me about our services, AI insights, or how we run a fully AI-powered business!",
-    30
+    30,
+    introMessageDiv  // Ensure the typing effect knows where to insert the text
   );
 });
 
 // ========== FUNCTION TO SHOW TYPING EFFECT ==========
 function typeWriterEffect(text, speed, element) {
+  if (!element) {
+    console.error("typeWriterEffect was called with an undefined element!");
+    return;
+  }
+
   let index = 0;
 
   function type() {
