@@ -6,7 +6,6 @@ const prompts = document.getElementById('promptSuggestions').querySelectorAll('.
 
 // GitHub Actions API Proxy (replace with your GitHub details)
 const GITHUB_PROXY_URL = "https://api.github.com/repos/simwilso/virtualaiofficer-site/dispatches";
-const GITHUB_SECRET_NAME = "GH_PAT_AI"; // Must match the GitHub Secret Name
 
 // Knowledge Base URL (stored in GitHub repo)
 const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
@@ -28,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   chatDisplay.appendChild(introMessageDiv);
 
   typeWriterEffect(
-    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! I work with my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—We offer AI products, strategy, education, automation, and advice. \n\n How are we different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, including management of this site! We are tech veterans and business owners, we know what works (and what doesn’t) from real-world experience and we know how AI can and will change everything. \n\n Our mission is to help Aussie businesses like you ride this wave safely and win! \n\n So Book a call or just chat with me and ask about our team, our projects, or anything AI—I’m here 24/7 at your service. \n\n P.S. Do you like the retro look? Well, this site is 100% AI-designed and run, and we felt like honoring our roots in tech! :)",
+    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! I work with my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—We offer AI products, strategy, education, automation, and advice.\n\nHow are we different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, including management of this site! We are tech veterans and business owners, we know what works (and what doesn’t) from real-world experience and we know how AI can and will change everything.\n\nOur mission is to help Aussie businesses like you ride this wave safely and win!\n\nSo Book a call or just chat with me and ask about our team, our projects, or anything AI—I’m here 24/7 at your service.\n\nP.S. Do you like the retro look? Well, this site is 100% AI-designed and run, and we felt like honoring our roots in tech! :)",
     30,
     introMessageDiv
   );
@@ -120,11 +119,10 @@ async function fetchAIResponse(userQuery) {
   `;
 
   try {
-    // Send request to GitHub Actions API Proxy
     const response = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GITHUB_SECRET_NAME}`,  
+        "Authorization": `Bearer ${GH_PAT_AI}`,  
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json"
       },
@@ -134,44 +132,43 @@ async function fetchAIResponse(userQuery) {
       })
     });
 
-    if (response.ok) {
-      console.log("Query sent to GitHub Actions, waiting for response...");
+    if (!response.ok) {
+      console.error("GitHub API Authentication Failed: Invalid Token or Missing Permissions.");
+      addMessage('AI', "There was an authentication issue. Please check the GitHub API token.", true);
+      return;
+    }
 
-      // Wait before retrieving response from GitHub Actions artifact
-      await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log("Query sent to GitHub Actions, waiting for response...");
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
-      const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
-        headers: { "Authorization": `Bearer ${GITHUB_SECRET_NAME}` }
+    const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
+      headers: { "Authorization": `Bearer ${GH_PAT_AI}` }
+    });
+
+    const artifactData = await artifactResponse.json();
+
+    if (artifactData.artifacts && artifactData.artifacts.length > 0) {
+      const artifactURL = artifactData.artifacts[0].archive_download_url;
+
+      const aiResponse = await fetch(artifactURL, {
+        headers: { "Authorization": `Bearer ${GH_PAT_AI}` }
       });
 
-      const artifactData = await artifactResponse.json();
+      const jsonData = await aiResponse.json();
+      console.log("AI Response:", jsonData);
+      
+      let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
 
-      if (artifactData.artifacts && artifactData.artifacts.length > 0) {
-        const artifactURL = artifactData.artifacts[0].archive_download_url;
-
-        const aiResponse = await fetch(artifactURL, {
-          headers: { "Authorization": `Bearer ${GITHUB_SECRET_NAME}` }
-        });
-
-        const jsonData = await aiResponse.json();
-        console.log("AI Response:", jsonData);
-        
-        let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
-
-        // Extract only AI-generated response
-        if (aiReply.includes("BEGIN RESPONSE:")) {
-          aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
-        }
-        if (aiReply.includes("END RESPONSE")) {
-          aiReply = aiReply.split("END RESPONSE")[0]?.trim();
-        }
-
-        addMessage('AI', aiReply, true);
-      } else {
-        addMessage('AI', "I couldn't process that. Try again!", true);
+      if (aiReply.includes("BEGIN RESPONSE:")) {
+        aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
       }
+      if (aiReply.includes("END RESPONSE")) {
+        aiReply = aiReply.split("END RESPONSE")[0]?.trim();
+      }
+
+      addMessage('AI', aiReply, true);
     } else {
-      console.error("Failed to send request to GitHub Actions.");
+      addMessage('AI', "I couldn't process that. Try again!", true);
     }
   } catch (error) {
     console.error("Error fetching AI response:", error);
