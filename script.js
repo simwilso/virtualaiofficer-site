@@ -71,16 +71,14 @@ function handleUserInput() {
 function addMessage(sender, text, applyTypingEffect = false) {
   const msgDiv = document.createElement('div');
   msgDiv.classList.add('chat-message');
-  msgDiv.innerHTML = `<strong>${sender}:</strong> `;
   chatDisplay.appendChild(msgDiv);
 
   if (applyTypingEffect) {
-    typeWriterEffect(text, 30, msgDiv);
+    typeWriterEffect(text, 30, msgDiv); // AI messages use typing effect
   } else {
-    msgDiv.innerHTML += text;  // Immediately show user input
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`; // User messages appear instantly
+    chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
   }
-
-  chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
 // ========== FETCH AI RESPONSE ==========
