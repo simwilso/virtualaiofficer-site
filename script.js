@@ -92,11 +92,24 @@ function addMessage(sender, text, applyTypingEffect = false) {
   }
 }
 
+// ========== FETCH GITHUB PAT FROM BACKEND ==========
+async function getGitHubPAT() {
+  try {
+    const response = await fetch("/get-github-pat"); // Your backend proxy endpoint
+    if (!response.ok) throw new Error("Failed to fetch GitHub PAT");
+    const data = await response.json();
+    return data.GITHUB_PAT;
+  } catch (error) {
+    console.error("Error fetching GitHub PAT:", error);
+    return null;
+  }
+}
+
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
-  const GITHUB_PAT = "11AIILNEY0L1YRDXNw9pZp_IODEfA8iozFWEEgxI2FoW3ZIJfNzWirrMtRa2mEq3W7CZND2ZFF4HcTBSKL"; // Temporary for testing
+  const GITHUB_PAT = await getGitHubPAT(); // Retrieve GitHub PAT securely
 
-  if (!GITHUB_PAT || GITHUB_PAT.includes("11AIILNEY0L1YRDXNw9pZp_IODEfA8iozFWEEgxI2FoW3ZIJfNzWirrMtRa2mEq3W7CZND2ZFF4HcTBSKL")) {
+  if (!GITHUB_PAT) {
     console.error("GitHub PAT is missing. Ensure it is correctly set in GitHub Secrets.");
     addMessage('AI', "Authentication error. Please check the GitHub API token.", true);
     return;
@@ -113,7 +126,7 @@ async function fetchAIResponse(userQuery) {
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: userQuery }
+        client_payload: { user_query }
       })
     });
 
@@ -125,7 +138,7 @@ async function fetchAIResponse(userQuery) {
     addMessage('AI', "Thinking...", true);
 
     // Wait for GitHub Actions to complete
-    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
     // Fetch AI-generated response from GitHub Actions artifacts
     const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
@@ -133,7 +146,7 @@ async function fetchAIResponse(userQuery) {
     });
 
     const artifactData = await artifactResponse.json();
-    
+
     if (!artifactData.artifacts || artifactData.artifacts.length === 0) {
       throw new Error("No AI response found in artifacts.");
     }
