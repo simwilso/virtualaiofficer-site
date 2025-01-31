@@ -104,7 +104,7 @@ async function fetchAIResponse(userQuery) {
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: userQuery }
+        client_payload: { user_query: userQuery } // ✅ Corrected variable name
       })
     });
 
