@@ -8,7 +8,7 @@ const prompts = document
 
 // NOTE: Must have your GH PAT if calling from the front-end:
 const GITHUB_PROXY_URL = "https://api.github.com/repos/simwilso/virtualaiofficer-site/dispatches";
-const GITHUB_TOKEN = "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"; // <-- Replace with a real token (NOT recommended in production)
+const GITHUB_TOKEN = "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"; // <-- Replace with a real token (NOT recommended in production)
 
 // Knowledge Base URL (stored in GitHub repo)
 const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
