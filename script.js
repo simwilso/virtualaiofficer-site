@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   chatDisplay.appendChild(introMessageDiv);
 
   typeWriterEffect(
-    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! I work with my human co-founder, Simon, and our team of AI agents to bring the AI revolution to businesses like yours—We offer AI products, strategy, education, automation, and advice.\n\nHow are we different? We don’t just talk about AI—we run our business with it. Our AI tools operate at every level, including management of this site! We are tech veterans and business owners, we know what works (and what doesn’t) from real-world experience and we know how AI can and will change everything.\n\nOur mission is to help Aussie businesses like you ride this wave safely and win!\n\nSo Book a call or just chat with me and ask about our team, our projects, or anything AI—I’m here 24/7 at your service.\n\nP.S. Do you like the retro look? Well, this site is 100% AI-designed and run, and we felt like honoring our roots in tech! :)",
+    "Hey there, I’m Marvin",
     30,
     introMessageDiv
   );
@@ -92,21 +92,14 @@ function addMessage(sender, text, applyTypingEffect = false) {
   }
 }
 
-// ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
+const GITHUB_PAT = ""; // Will be set dynamically from GitHub Secrets
+
 async function fetchAIResponse(userQuery) {
-  const GITHUB_PAT = "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"; // Securely fetch from GitHub Secrets
-
-  const systemMessage = `
-  You are Marvin, a co-founder of Virtual AI Officer, and you represent the business. Your job is to answer user questions **ONLY using the provided knowledge base**.
-
-  === KNOWLEDGE BASE START ===
-  ${knowledgeBaseText}
-  === KNOWLEDGE BASE END ===
-
-  **User Question:** ${userQuery}
-
-  BEGIN RESPONSE:
-  `;
+  if (!GITHUB_PAT) {
+    console.error("GitHub PAT is missing. Ensure it is correctly set in GitHub Secrets.");
+    addMessage('AI', "Authentication error. Please check the GitHub API token.", true);
+    return;
+  }
 
   try {
     const response = await fetch(GITHUB_PROXY_URL, {
@@ -118,7 +111,7 @@ async function fetchAIResponse(userQuery) {
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: systemMessage }
+        client_payload: { user_query: userQuery }
       })
     });
 
@@ -134,3 +127,4 @@ async function fetchAIResponse(userQuery) {
     addMessage('AI', "An authentication error occurred. Please check the GitHub API token.", true);
   }
 }
+
