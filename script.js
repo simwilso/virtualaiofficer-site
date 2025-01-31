@@ -94,18 +94,10 @@ function addMessage(sender, text, applyTypingEffect = false) {
 
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
-  const GITHUB_PAT = "REPLACE_WITH_GITHUB_SECRET"; // Will be replaced at runtime
+  const GITHUB_PAT = "REPLACE_WITH_GITHUB_SECRET"; // Securely fetch from GitHub Secrets
 
   const systemMessage = `
   You are Marvin, a co-founder of Virtual AI Officer, and you represent the business. Your job is to answer user questions **ONLY using the provided knowledge base**.
-
-  **Rules for answering:**
-  - **DO NOT generate information from your own knowledge**—only use the knowledge base below.
-  - If the answer is **not in the knowledge base**, reply: "I'm not sure, but my team is always updating me! Or you can Book a Call."
-  - **If an exact match isn't found, infer the closest possible AI solutions based on available knowledge.**
-  - **Summarize rather than listing too many solutions.**
-  - **Only comment on questions related to business or AI. Politely decline to comment on other topics.**
-  - **When finished, say 'END RESPONSE'.**
 
   === KNOWLEDGE BASE START ===
   ${knowledgeBaseText}
