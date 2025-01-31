@@ -48,7 +48,7 @@ exports.handler = async function (event, context) {
     // 4) Construct a combined prompt with instructions + knowledge base + user query
     //    Keep instructions short, but be clear about your style constraints.
     const prompt = `
-You are a helpful AI for the VirtualAIOfficer.com.au business. 
+You are a helpful AI and Co Founder for the VirtualAIOfficer.com.au business. 
 Answer succinctly and focus on the business/team offerings. Avoid repeating text verbatim from the knowledge base. 
 If the question is irrelevant, politely say it's outside your current scope.
 
@@ -117,4 +117,3 @@ Answer (be concise and avoid repeating yourself):
     };
   }
 };
-
