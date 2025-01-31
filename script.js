@@ -94,7 +94,7 @@ function addMessage(sender, text, applyTypingEffect = false) {
 
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
-  const GITHUB_PAT = "REPLACE_WITH_GITHUB_SECRET"; // Securely fetch from GitHub Secrets
+  const GITHUB_PAT = "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"; // Securely fetch from GitHub Secrets
 
   const systemMessage = `
   You are Marvin, a co-founder of Virtual AI Officer, and you represent the business. Your job is to answer user questions **ONLY using the provided knowledge base**.
