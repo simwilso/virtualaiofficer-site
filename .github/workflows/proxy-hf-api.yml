@@ -19,18 +19,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Call Hugging Face API
-      env:
-        HF_API_KEY: ${{ secrets.HF_API_KEY }}
-      run: |
-        curl -X POST "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct" \
-        -H "Authorization: Bearer $HF_API_KEY" \
-        -H "Content-Type: application/json" \
-        --data '{"inputs": "${{ github.event.inputs.user_query || github.event.client_payload.user_query }}", "parameters": {"max_new_tokens": 250, "temperature": 0.2, "top_p": 0.7, "repetition_penalty": 1.5}}' \
-        -o response.json
+      - name: Call Hugging Face API
+        env:
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+        run: |
+          curl -X POST "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct" \
+            -H "Authorization: Bearer $HF_API_KEY" \
+            -H "Content-Type: application/json" \
+            --data '{"inputs": "${{ github.event.inputs.user_query || github.event.client_payload.user_query }}", "parameters": {"max_new_tokens": 250, "temperature": 0.2, "top_p": 0.7, "repetition_penalty": 1.5}}' \
+            -o response.json
 
-    - name: Upload Response
-      uses: actions/upload-artifact@v4
-      with:
-        name: ai-response
-        path: response.json
+      - name: Upload Response
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-response
+          path: response.json
