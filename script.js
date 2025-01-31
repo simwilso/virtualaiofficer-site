@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   chatDisplay.appendChild(introMessageDiv);
 
   typeWriterEffect(
-    "Hey there, I’m Marvin",
+    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! Ask me anything about AI and business solutions.",
     30,
     introMessageDiv
   );
@@ -92,61 +92,74 @@ function addMessage(sender, text, applyTypingEffect = false) {
   }
 }
 
+// ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
+  const GITHUB_PAT = "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"; // Ensure this is securely stored
+
+  if (!GITHUB_PAT) {
+    console.error("GitHub PAT is missing. Ensure it is correctly set in GitHub Secrets.");
+    addMessage('AI', "Authentication error. Please check the GitHub API token.", true);
+    return;
+  }
+
   try {
-    const response = await fetch(GITHUB_PROXY_URL, {
+    // Trigger GitHub Actions workflow
+    const triggerResponse = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GITHUB_PAT}`,  
+        "Authorization": `Bearer ${GITHUB_PAT}`,
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query }
+        client_payload: { user_query: userQuery }
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`GitHub API Authentication Failed: ${response.status} ${response.statusText}`);
+    if (!triggerResponse.ok) {
+      throw new Error(`GitHub API Authentication Failed: ${triggerResponse.status} ${triggerResponse.statusText}`);
     }
 
     console.log("Query sent to GitHub Actions, waiting for response...");
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for the workflow to complete
+    addMessage('AI', "Thinking...", true);
 
-    // Retrieve the AI-generated response
+    // Wait for GitHub Actions to complete
+    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+
+    // Fetch AI-generated response from GitHub Actions artifacts
     const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
       headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
     });
 
     const artifactData = await artifactResponse.json();
-
-    if (artifactData.artifacts && artifactData.artifacts.length > 0) {
-      const artifactURL = artifactData.artifacts[0].archive_download_url;
-
-      const aiResponse = await fetch(artifactURL, {
-        headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
-      });
-
-      const jsonData = await aiResponse.json();
-      console.log("AI Response:", jsonData);
-      
-      let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
-
-      if (aiReply.includes("BEGIN RESPONSE:")) {
-        aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
-      }
-      if (aiReply.includes("END RESPONSE")) {
-        aiReply = aiReply.split("END RESPONSE")[0]?.trim();
-      }
-
-      addMessage('AI', aiReply, true);
-    } else {
-      throw new Error("No AI response received from GitHub Actions.");
+    
+    if (!artifactData.artifacts || artifactData.artifacts.length === 0) {
+      throw new Error("No AI response found in artifacts.");
     }
+
+    const artifactURL = artifactData.artifacts[0].archive_download_url;
+
+    const aiResponse = await fetch(artifactURL, {
+      headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+    });
+
+    const jsonData = await aiResponse.json();
+    console.log("AI Response:", jsonData);
+
+    let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
+
+    if (aiReply.includes("BEGIN RESPONSE:")) {
+      aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
+    }
+    if (aiReply.includes("END RESPONSE")) {
+      aiReply = aiReply.split("END RESPONSE")[0]?.trim();
+    }
+
+    addMessage('AI', aiReply, true);
 
   } catch (error) {
     console.error("Error fetching AI response:", error);
-    addMessage('AI', "An authentication error occurred. Please check the GitHub API token.", true);
+    addMessage('AI', "An error occurred. Please try again later.", true);
   }
 }
