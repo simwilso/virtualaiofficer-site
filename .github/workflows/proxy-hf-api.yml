@@ -10,7 +10,6 @@ on:
   repository_dispatch:
     types: [query-ai]
 
-
 jobs:
   query-ai:
     runs-on: ubuntu-latest
@@ -24,7 +23,7 @@ jobs:
         curl -X POST "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct" \
         -H "Authorization: Bearer $HF_API_KEY" \
         -H "Content-Type: application/json" \
-        --data "$(jq -n --arg query "${{ github.event.client_payload.user_query }}" \
+        --data "$(jq -n --arg query "${{ github.event.inputs.user_query || github.event.client_payload.user_query }}" \
         '{"inputs": $query, "parameters": {"max_new_tokens": 250, "temperature": 0.2, "top_p": 0.7, "repetition_penalty": 1.5}}')" \
         -o response.json
 
