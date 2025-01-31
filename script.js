@@ -2,11 +2,13 @@
 const chatDisplay = document.getElementById('chatDisplay');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
-const prompts = document.getElementById('promptSuggestions').querySelectorAll('.prompt-suggestion');
+const prompts = document
+  .getElementById('promptSuggestions')
+  .querySelectorAll('.prompt-suggestion');
 
-// GitHub Actions API Proxy (replace with your GitHub details)
+// NOTE: Must have your GH PAT if calling from the front-end:
 const GITHUB_PROXY_URL = "https://api.github.com/repos/simwilso/virtualaiofficer-site/dispatches";
-
+const GITHUB_TOKEN = "YOUR_GITHUB_PAT"; // <-- Replace with a real token (NOT recommended in production)
 
 // Knowledge Base URL (stored in GitHub repo)
 const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
@@ -88,7 +90,7 @@ function addMessage(sender, text, applyTypingEffect = false) {
   if (applyTypingEffect) {
     typeWriterEffect(text, 30, msgDiv); 
   } else {
-    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`; 
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
     chatDisplay.scrollTop = chatDisplay.scrollHeight;
   }
 }
@@ -96,15 +98,18 @@ function addMessage(sender, text, applyTypingEffect = false) {
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
   try {
+    // 1) Trigger GitHub Actions workflow using "repository_dispatch" event
     const triggerResponse = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
         "Accept": "application/vnd.github.v3+json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        // IMPORTANT: Include the token below
+        "Authorization": `Bearer ${GITHUB_TOKEN}`
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: userQuery } // ✅ Corrected variable reference
+        client_payload: { user_query: userQuery }
       })
     });
 
@@ -115,11 +120,18 @@ async function fetchAIResponse(userQuery) {
     console.log("Query sent to GitHub Actions, waiting for response...");
     addMessage('AI', "Thinking...", true);
 
-    // Wait for GitHub Actions to complete
+    // 2) Wait for GitHub Actions to complete
+    //    This is just a naive wait; you could poll for the status, but here's a simple 10s delay:
     await new Promise(resolve => setTimeout(resolve, 10000));
 
-    // Fetch AI-generated response from GitHub Actions artifacts
-    const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`);
+    // 3) Fetch AI-generated response from GitHub Actions artifacts
+    const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
+      headers: {
+        "Accept": "application/vnd.github.v3+json",
+        // If the repo is private, you also need the token here.
+        "Authorization": `Bearer ${GITHUB_TOKEN}`
+      }
+    });
 
     if (!artifactResponse.ok) {
       throw new Error(`Failed to fetch artifacts: ${artifactResponse.status} ${artifactResponse.statusText}`);
@@ -134,17 +146,24 @@ async function fetchAIResponse(userQuery) {
     // Retrieve the latest AI-generated response
     const artifactURL = artifactData.artifacts[0].archive_download_url;
 
-    const aiResponse = await fetch(artifactURL);
+    const aiResponse = await fetch(artifactURL, {
+      headers: {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": `Bearer ${GITHUB_TOKEN}`
+      }
+    });
 
     if (!aiResponse.ok) {
       throw new Error(`Failed to fetch AI response: ${aiResponse.status} ${aiResponse.statusText}`);
     }
 
+    // 4) This response is a JSON file with the HF text
     const jsonData = await aiResponse.json();
     console.log("AI Response:", jsonData);
 
     let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
 
+    // Clean up custom markers if you had them
     if (aiReply.includes("BEGIN RESPONSE:")) {
       aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
     }
