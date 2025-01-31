@@ -94,6 +94,8 @@ function addMessage(sender, text, applyTypingEffect = false) {
 
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
+  const GITHUB_PAT = "REPLACE_WITH_GITHUB_SECRET"; // Will be replaced at runtime
+
   const systemMessage = `
   You are Marvin, a co-founder of Virtual AI Officer, and you represent the business. Your job is to answer user questions **ONLY using the provided knowledge base**.
 
@@ -115,10 +117,6 @@ async function fetchAIResponse(userQuery) {
   `;
 
   try {
-const GITHUB_PAT = "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"; // Will be replaced at runtime
-
-async function fetchAIResponse(userQuery) {
-  try {
     const response = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
@@ -128,7 +126,7 @@ async function fetchAIResponse(userQuery) {
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: userQuery }
+        client_payload: { user_query: systemMessage }
       })
     });
 
@@ -144,4 +142,3 @@ async function fetchAIResponse(userQuery) {
     addMessage('AI', "An authentication error occurred. Please check the GitHub API token.", true);
   }
 }
-
