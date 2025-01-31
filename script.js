@@ -1,65 +1,144 @@
-// script.js
+/*****************************************************
+ * script.js
+ *****************************************************/
 
+// ========== SELECTORS ==========
 const chatDisplay = document.getElementById('chatDisplay');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
+const promptEls = document
+  .getElementById('promptSuggestions')
+  .querySelectorAll('.prompt-suggestion');
 
-// The relative URL for your Netlify function
-// If the site is served by Netlify, "/.netlify/functions/query-ai" is correct
+// ========== NETLIFY FUNCTION ENDPOINT ==========
+// We call our serverless function that hits Hugging Face
 const NETLIFY_FUNCTION_URL = "/.netlify/functions/query-ai";
 
-// For demonstration, we'll just show messages in the chatDisplay
-function addMessage(sender, text) {
-  const msgDiv = document.createElement('div');
-  msgDiv.classList.add('chat-message');
-  msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
-  chatDisplay.appendChild(msgDiv);
-  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+// ========== KNOWLEDGE BASE URL ==========
+const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
+let knowledgeBaseText = "";
+
+// Fetch the knowledge base on load
+fetch(KNOWLEDGE_BASE_URL)
+  .then(response => response.text())
+  .then(text => {
+    knowledgeBaseText = text;
+  })
+  .catch(error => console.error("Error loading knowledge base:", error));
+
+// ========== TYPEWRITER EFFECT ==========
+function typeWriterEffect(text, speed, element) {
+  if (!element) {
+    console.error("typeWriterEffect was called with an undefined element!");
+    return;
+  }
+  let index = 0;
+
+  function type() {
+    if (index < text.length) {
+      element.innerHTML = `<strong>AI:</strong> ${text.substring(0, index + 1)}`;
+      index++;
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
+      setTimeout(type, speed);
+    } else {
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+  }
+
+  type();
 }
 
-async function fetchAIResponse(userQuery) {
-  try {
-    addMessage("AI", "Thinking...");
+// ========== FUNCTION TO DISPLAY A CHAT MESSAGE ==========
+function addMessage(sender, text, applyTypingEffect = false) {
+  const msgDiv = document.createElement('div');
+  msgDiv.classList.add('chat-message');
+  chatDisplay.appendChild(msgDiv);
 
-    const res = await fetch(NETLIFY_FUNCTION_URL, {
+  if (applyTypingEffect && sender === 'AI') {
+    // Show AI message with typewriter effect
+    typeWriterEffect(text, 30, msgDiv);
+  } else {
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+  }
+}
+
+// ========== INITIAL INTRODUCTION ON PAGE LOAD ==========
+document.addEventListener('DOMContentLoaded', () => {
+  const introMessageDiv = document.createElement('div');
+  introMessageDiv.classList.add('chat-message');
+  chatDisplay.appendChild(introMessageDiv);
+
+  // We'll do the typewriter effect for the intro
+  typeWriterEffect(
+    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! Ask me anything about AI and business solutions.",
+    30,
+    introMessageDiv
+  );
+});
+
+// ========== EVENT LISTENERS ==========
+sendBtn.addEventListener('click', handleUserInput);
+userInput.addEventListener('keyup', (e) => {
+  if (e.key === 'Enter') handleUserInput();
+});
+promptEls.forEach(promptEl => {
+  promptEl.addEventListener('click', () => {
+    userInput.value = promptEl.textContent;
+    handleUserInput();
+  });
+});
+
+// ========== HANDLE USER INPUT ==========
+function handleUserInput() {
+  const text = userInput.value.trim();
+  if (!text) return;
+
+  // Show user's message
+  addMessage('User', text);
+  userInput.value = '';
+
+  // Merge the knowledge base as context
+  // In a naive approach, we just prepend it to the user's query
+  let combinedPrompt = text;
+  if (knowledgeBaseText) {
+    combinedPrompt = `Here is some additional context from our knowledge base:\n\n${knowledgeBaseText}\n\nUser's Question:\n${text}`;
+  }
+
+  fetchAIResponse(combinedPrompt);
+}
+
+// ========== FETCH AI RESPONSE DIRECTLY VIA NETLIFY FUNCTION ==========
+async function fetchAIResponse(combinedPrompt) {
+  try {
+    // Temporarily show "Thinking..." with a typewriter effect
+    // We'll replace it once we get the real response
+    addMessage('AI', "Thinking...", true);
+
+    const response = await fetch(NETLIFY_FUNCTION_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_query: userQuery })
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ user_query: combinedPrompt })
     });
 
-    if (!res.ok) {
-      throw new Error(`Netlify function call failed: ${res.status} ${res.statusText}`);
+    if (!response.ok) {
+      throw new Error(`Netlify function call failed: ${response.status} ${response.statusText}`);
     }
 
-    const data = await res.json();
+    const data = await response.json();
     if (data.error) {
       throw new Error(data.error);
     }
 
-    const aiReply = data.aiReply || "No reply found.";
-    addMessage("AI", aiReply);
+    // Display the final AI reply
+    // We'll do typewriter effect again
+    const aiReply = data.aiReply || "No response found.";
+    addMessage('AI', aiReply, true);
 
   } catch (error) {
     console.error("Error fetching AI response:", error);
-    addMessage("AI", "An error occurred. Please try again later.");
+    addMessage('AI', "An error occurred. Please try again later.");
   }
 }
-
-function handleUserInput() {
-  const query = userInput.value.trim();
-  if (!query) return;
-  addMessage("User", query);
-  userInput.value = "";
-
-  fetchAIResponse(query);
-}
-
-sendBtn.addEventListener("click", handleUserInput);
-userInput.addEventListener("keyup", (e) => {
-  if (e.key === 'Enter') handleUserInput();
-});
-
-// Optionally an intro message
-document.addEventListener("DOMContentLoaded", () => {
-  addMessage("AI", "Hey there, I’m Marvin, AI agent from Hugging Face. Ask me anything!");
-});
