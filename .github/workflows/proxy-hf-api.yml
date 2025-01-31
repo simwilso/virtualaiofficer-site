@@ -2,8 +2,14 @@ name: Hugging Face API Proxy
 
 on:
   workflow_dispatch:
+    inputs:
+      user_query:
+        description: 'Enter a test question for the chatbot'
+        required: true
+        default: 'What AI services do you offer?'
   repository_dispatch:
     types: [query-ai]
+
 
 jobs:
   query-ai:
