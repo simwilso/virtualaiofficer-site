@@ -115,7 +115,7 @@ async function fetchAIResponse(userQuery) {
   `;
 
   try {
-const GITHUB_PAT = "REPLACE_THIS_WITH_GITHUB_SECRET"; // Will be replaced at runtime
+const GITHUB_PAT = "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"; // Will be replaced at runtime
 
 async function fetchAIResponse(userQuery) {
   try {
