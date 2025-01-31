@@ -95,7 +95,7 @@ function addMessage(sender, text, applyTypingEffect = false) {
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
   try {
-    // Trigger GitHub Actions workflow without requiring authentication
+    // Trigger GitHub Actions workflow
     const triggerResponse = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
@@ -104,7 +104,7 @@ async function fetchAIResponse(userQuery) {
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: userQuery } // ✅ Corrected variable name
+        client_payload: { user_query: userQuery } // ✅ Corrected variable reference
       })
     });
 
