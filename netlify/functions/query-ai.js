@@ -1,15 +1,10 @@
 // netlify/functions/query-ai.js
 
-// For Netlify compatibility:
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 exports.handler = async function (event, context) {
-  // Only allow POST
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: "Method not allowed. Use POST." }),
-    };
+    return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed. Use POST." }) };
   }
 
   try {
@@ -22,7 +17,7 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // 2) Read HF API key from Netlify environment
+    // 2) Hugging Face API key from Netlify env
     const HF_API_KEY = process.env.HF_API_KEY;
     if (!HF_API_KEY) {
       return {
@@ -31,7 +26,7 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // 3) Load your knowledge base from GitHub (raw URL)
+    // 3) Load your knowledge base from GitHub
     const kbUrl = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
     let knowledgeBaseText = "";
     try {
@@ -39,30 +34,62 @@ exports.handler = async function (event, context) {
       if (kbResponse.ok) {
         knowledgeBaseText = await kbResponse.text();
       } else {
-        console.warn("Warning: Could not load knowledge base. Response:", kbResponse.status, kbResponse.statusText);
+        console.warn("Warning: KB fetch failed:", kbResponse.status, kbResponse.statusText);
       }
     } catch (e) {
-      console.warn("Warning: Knowledge base fetch failed:", e);
+      console.warn("Warning: KB fetch error:", e);
     }
 
-    // 4) Construct a combined prompt with instructions + knowledge base + user query
-    //    Keep instructions short, but be clear about your style constraints.
-    const prompt = `
-You are a helpful AI and Co Founder for the VirtualAIOfficer.com.au business. 
-Answer succinctly and focus on the business/team offerings. Avoid repeating text verbatim from the knowledge base. 
-If the question is irrelevant, politely say it's outside your current scope.
+    // 4) Split the KB into paragraphs (or lines) for naive retrieval
+    //    The delimiter "\n\n" is a guess. Adjust if your MD uses single line breaks.
+    const paragraphs = knowledgeBaseText
+      .split(/\n\s*\n/) // split by blank lines
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
 
-Knowledge Base:
-${knowledgeBaseText}
+    // 5) A super-naive "similarity" by counting word overlap
+    function getOverlapScore(textA, textB) {
+      const setA = new Set(textA.toLowerCase().split(/\W+/));
+      const setB = new Set(textB.toLowerCase().split(/\W+/));
+      let score = 0;
+      for (let word of setA) {
+        if (setB.has(word)) score++;
+      }
+      return score;
+    }
+
+    // 6) Rank each paragraph by overlap with user query
+    const scoredParagraphs = paragraphs.map((p) => ({
+      text: p,
+      score: getOverlapScore(p, user_query),
+    }));
+
+    // 7) Sort descending by score
+    scoredParagraphs.sort((a, b) => b.score - a.score);
+
+    // 8) Take the top 1 or 2 paragraphs
+    const topChunks = scoredParagraphs.slice(0, 2).map(obj => obj.text).join("\n\n");
+
+    // 9) Build a short prompt with:
+    //    - Our “system instruction” style text
+    //    - The top chunk(s) of the KB
+    //    - The user’s question
+    const prompt = `
+You are a helpful AI for VirtualAIOfficer.com.au. 
+- Provide concise answers, relevant to the user’s question.
+- Don't repeat large sections verbatim from the KB. Summarize when needed.
+- If question is off-topic, say so politely.
+
+Relevant Knowledge Base Info:
+${topChunks}
 
 User's Question:
 ${user_query}
 
-Answer (be concise and avoid repeating yourself):
+Answer (brief, relevant, no large verbatim quotes):
 `;
 
-    // 5) Call Hugging Face Inference API
-    //    We'll reduce temperature, add repetition_penalty, and reduce max_new_tokens
+    // 10) Call Hugging Face Inference API with lower temperature, higher repetition penalty, shorter max tokens
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfResponse = await fetch(modelURL, {
       method: "POST",
@@ -73,14 +100,10 @@ Answer (be concise and avoid repeating yourself):
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          // Fewer tokens => more succinct replies
-          max_new_tokens: 150,          
-          // Lower temperature => less "creative" / less wandering
-          temperature: 0.1,             
-          // Keep top_p moderate; can tweak if you want less variety
+          max_new_tokens: 150,
+          temperature: 0.1,
           top_p: 0.7,
-          // Increase repetition_penalty => discourage repeating content
-          repetition_penalty: 2.0       
+          repetition_penalty: 2.0
         }
       })
     });
@@ -94,7 +117,6 @@ Answer (be concise and avoid repeating yourself):
       };
     }
 
-    // 6) Parse the AI response
     const hfData = await hfResponse.json();
     let aiReply = "No response found.";
     if (Array.isArray(hfData) && hfData[0]?.generated_text) {
@@ -103,14 +125,13 @@ Answer (be concise and avoid repeating yourself):
       aiReply = hfData.generated_text;
     }
 
-    // Return final text
     return {
       statusCode: 200,
       body: JSON.stringify({ aiReply })
     };
 
   } catch (error) {
-    console.error("Error in serverless function:", error);
+    console.error("Error in Netlify function:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message })
