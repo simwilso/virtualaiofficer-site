@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // We'll do the typewriter effect for the intro
   typeWriterEffect(
-    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! Ask me anything about AI and business solutions.",
+    "Hey there, I’m Marvin, AI agent and Co-Founder of VirtualAIOfficer.com.au! At VAIO we provide AI Strategy, Education, Consulting, and Project Delivery. We are passionate about Responsible AI for Impact as well as Regional Development especially in Gippsland. We use AI Agents comprehensively in our business. In fact we have a team of agents who design, manage, update and maintain this site which we've deliberately made hideous and given our agents the task to progressively clean it up so that we can show the fully AI Autonomous process.  In reality they'd make the adjustments in a day but we've instructed them to slow down so we can all watch and enjoy the progress :)",
     30,
     introMessageDiv
   );
