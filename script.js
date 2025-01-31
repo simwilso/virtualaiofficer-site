@@ -92,13 +92,18 @@ function addMessage(sender, text, applyTypingEffect = false) {
   }
 }
 
-
 async function fetchAIResponse(userQuery) {
+  if (!userQuery || userQuery.trim() === "") {
+    console.error("User query is empty. Cannot send an empty request.");
+    addMessage('AI', "I need a valid question to process. Try asking about AI services!", true);
+    return;
+  }
+
   try {
     const response = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.GITHUB_PAT || ""}`,  
+        "Authorization": `Bearer ${GITHUB_PAT}`,  
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json"
       },
