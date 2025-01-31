@@ -1,0 +1,9 @@
+{
+  "name": "virtualaiofficer-site",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "node-fetch": "^3.3.1"
+  }
+}
