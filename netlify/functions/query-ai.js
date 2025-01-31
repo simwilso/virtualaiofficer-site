@@ -1,19 +1,19 @@
 // netlify/functions/query-ai.js
 
-// We dynamically import "node-fetch" for Netlify compatibility.
+// Netlify often requires a dynamic import of node-fetch.
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 exports.handler = async function (event, context) {
-  // 1) Only allow POST requests to this function (optional safeguard)
+  // 1) Only allow POST
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: JSON.stringify({ error: "Method not allowed. Use POST." }),
+      body: JSON.stringify({ error: "Method Not Allowed, use POST." }),
     };
   }
 
   try {
-    // 2) Parse the JSON body to get the user's query
+    // 2) Parse the input from the body
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
       return {
@@ -22,83 +22,68 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // 3) Read the GitHub token from Netlify environment variables (private!)
-    const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
-    const REPO_OWNER = "simwilso";
-    const REPO_NAME = "virtualaiofficer-site";
+    // 3) Read HF API key from Netlify env vars (private)
+    const HF_API_KEY = process.env.HF_API_KEY;
+    if (!HF_API_KEY) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "Server config error: HF_API_KEY not set." }),
+      };
+    }
 
-    // 4) Trigger GitHub Actions Workflow via repository_dispatch
-    const dispatchURL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`;
-    let response = await fetch(dispatchURL, {
+    // 4) Call Hugging Face Inference API
+    //    Adjust model & parameters as needed. This example uses Falcon 7B Instruct:
+    const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
+    const hfResponse = await fetch(modelURL, {
       method: "POST",
       headers: {
-        "Accept": "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${GITHUB_TOKEN}`
+        "Authorization": `Bearer ${HF_API_KEY}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        event_type: "query-ai",
-        client_payload: { user_query }
+        inputs: user_query,
+        parameters: {
+          max_new_tokens: 250,
+          temperature: 0.2,
+          top_p: 0.7,
+          repetition_penalty: 1.5
+        }
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`Dispatch failed: ${response.status} ${response.statusText}`);
+    if (!hfResponse.ok) {
+      // Possibly show details in logs
+      const errText = await hfResponse.text();
+      console.error("Hugging Face API error:", errText);
+      return {
+        statusCode: hfResponse.status,
+        body: JSON.stringify({ error: `Hugging Face API error: ${errText}` }),
+      };
     }
 
-    console.log("GitHub repository_dispatch triggered successfully.");
+    // 5) The HF Inference endpoint generally returns an array with { generated_text: ... }
+    const hfData = await hfResponse.json();
+    // Example shape: [{ "generated_text": "Hello world" }]
 
-    // 5) Naively wait 10s for the workflow to run. (You could poll the run status instead.)
-    await new Promise(res => setTimeout(res, 20000));
-
-    // 6) Fetch the artifact from the GitHub Actions run
-    const artifactsURL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/artifacts`;
-    response = await fetch(artifactsURL, {
-      headers: {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": `Bearer ${GITHUB_TOKEN}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch artifacts: ${response.status} ${response.statusText}`);
+    let aiReply = "No response found.";
+    if (Array.isArray(hfData) && hfData[0]?.generated_text) {
+      aiReply = hfData[0].generated_text;
+    } else if (hfData.generated_text) {
+      // If the model returns a single object
+      aiReply = hfData.generated_text;
     }
 
-    const artifactData = await response.json();
-    if (!artifactData.artifacts || artifactData.artifacts.length === 0) {
-      throw new Error("No artifacts found (AI response not generated).");
-    }
-
-    // We'll assume the most recent artifact is the one we want
-    const artifactURL = artifactData.artifacts[0].archive_download_url;
-
-    // 7) Download the artifact (response.json) from the run
-    response = await fetch(artifactURL, {
-      headers: {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": `Bearer ${GITHUB_TOKEN}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch the AI response artifact: ${response.status} ${response.statusText}`);
-    }
-
-    const jsonData = await response.json();
-    const aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
-
-    // 8) Return the AI reply back to the front-end
+    // 6) Return the AI-generated text
     return {
       statusCode: 200,
       body: JSON.stringify({ aiReply })
     };
 
   } catch (error) {
-    console.error("Error in Netlify Function:", error);
+    console.error("Error in serverless function:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message })
     };
   }
 };
-
