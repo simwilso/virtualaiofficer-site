@@ -94,9 +94,9 @@ function addMessage(sender, text, applyTypingEffect = false) {
 
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
-  const GITHUB_PAT = "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"; // Ensure this is securely stored
+  const GITHUB_PAT = "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"; // Temporary for testing
 
-  if (!GITHUB_PAT) {
+  if (!GITHUB_PAT || GITHUB_PAT.includes("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")) {
     console.error("GitHub PAT is missing. Ensure it is correctly set in GitHub Secrets.");
     addMessage('AI', "Authentication error. Please check the GitHub API token.", true);
     return;
