@@ -92,20 +92,13 @@ function addMessage(sender, text, applyTypingEffect = false) {
   }
 }
 
-const GITHUB_PAT = ""; // Will be set dynamically from GitHub Secrets
 
 async function fetchAIResponse(userQuery) {
-  if (!GITHUB_PAT) {
-    console.error("GitHub PAT is missing. Ensure it is correctly set in GitHub Secrets.");
-    addMessage('AI', "Authentication error. Please check the GitHub API token.", true);
-    return;
-  }
-
   try {
     const response = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GITHUB_PAT}`,  
+        "Authorization": `Bearer ${process.env.GITHUB_PAT || ""}`,  
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json"
       },
@@ -127,4 +120,3 @@ async function fetchAIResponse(userQuery) {
     addMessage('AI', "An authentication error occurred. Please check the GitHub API token.", true);
   }
 }
-
