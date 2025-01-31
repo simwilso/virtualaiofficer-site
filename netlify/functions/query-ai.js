@@ -49,7 +49,7 @@ exports.handler = async function (event, context) {
     console.log("GitHub repository_dispatch triggered successfully.");
 
     // 5) Naively wait 10s for the workflow to run. (You could poll the run status instead.)
-    await new Promise(res => setTimeout(res, 10000));
+    await new Promise(res => setTimeout(res, 20000));
 
     // 6) Fetch the artifact from the GitHub Actions run
     const artifactsURL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/artifacts`;
