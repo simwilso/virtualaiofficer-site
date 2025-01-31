@@ -1,0 +1,6 @@
+[build]
+  # Directory containing your site. If your site is at root, this is "."
+  publish = "."
+
+  # Directory for serverless functions
+  functions = "netlify/functions"
