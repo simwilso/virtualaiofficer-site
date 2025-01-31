@@ -115,16 +115,20 @@ async function fetchAIResponse(userQuery) {
   `;
 
   try {
+const GITHUB_PAT = "REPLACE_THIS_WITH_GITHUB_SECRET"; // Will be replaced at runtime
+
+async function fetchAIResponse(userQuery) {
+  try {
     const response = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GH_PAT_AI}`,  
+        "Authorization": `Bearer ${GITHUB_PAT}`,  
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: systemMessage }
+        client_payload: { user_query: userQuery }
       })
     });
 
@@ -137,7 +141,7 @@ async function fetchAIResponse(userQuery) {
 
   } catch (error) {
     console.error("Error fetching AI response:", error);
-    addMessage('AI', "An error occurred. Please try again later.", true);
+    addMessage('AI', "An authentication error occurred. Please check the GitHub API token.", true);
   }
 }
 
