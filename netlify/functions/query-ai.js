@@ -1,19 +1,19 @@
 // netlify/functions/query-ai.js
 
-// Netlify often requires a dynamic import of node-fetch.
+// For Netlify compatibility:
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 exports.handler = async function (event, context) {
-  // 1) Only allow POST
+  // Only allow POST
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: JSON.stringify({ error: "Method Not Allowed, use POST." }),
+      body: JSON.stringify({ error: "Method not allowed. Use POST." }),
     };
   }
 
   try {
-    // 2) Parse the input from the body
+    // 1) Parse user query
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
       return {
@@ -22,7 +22,7 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // 3) Read HF API key from Netlify env vars (private)
+    // 2) Read HF API key from Netlify environment
     const HF_API_KEY = process.env.HF_API_KEY;
     if (!HF_API_KEY) {
       return {
@@ -31,8 +31,38 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // 4) Call Hugging Face Inference API
-    //    Adjust model & parameters as needed. This example uses Falcon 7B Instruct:
+    // 3) Load your knowledge base from GitHub (raw URL)
+    const kbUrl = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
+    let knowledgeBaseText = "";
+    try {
+      const kbResponse = await fetch(kbUrl);
+      if (kbResponse.ok) {
+        knowledgeBaseText = await kbResponse.text();
+      } else {
+        console.warn("Warning: Could not load knowledge base. Response:", kbResponse.status, kbResponse.statusText);
+      }
+    } catch (e) {
+      console.warn("Warning: Knowledge base fetch failed:", e);
+    }
+
+    // 4) Construct a combined prompt with instructions + knowledge base + user query
+    //    Keep instructions short, but be clear about your style constraints.
+    const prompt = `
+You are a helpful AI for the VirtualAIOfficer.com.au business. 
+Answer succinctly and focus on the business/team offerings. Avoid repeating text verbatim from the knowledge base. 
+If the question is irrelevant, politely say it's outside your current scope.
+
+Knowledge Base:
+${knowledgeBaseText}
+
+User's Question:
+${user_query}
+
+Answer (be concise and avoid repeating yourself):
+`;
+
+    // 5) Call Hugging Face Inference API
+    //    We'll reduce temperature, add repetition_penalty, and reduce max_new_tokens
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfResponse = await fetch(modelURL, {
       method: "POST",
@@ -41,18 +71,21 @@ exports.handler = async function (event, context) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        inputs: user_query,
+        inputs: prompt,
         parameters: {
-          max_new_tokens: 250,
-          temperature: 0.2,
+          // Fewer tokens => more succinct replies
+          max_new_tokens: 150,          
+          // Lower temperature => less "creative" / less wandering
+          temperature: 0.1,             
+          // Keep top_p moderate; can tweak if you want less variety
           top_p: 0.7,
-          repetition_penalty: 1.5
+          // Increase repetition_penalty => discourage repeating content
+          repetition_penalty: 2.0       
         }
       })
     });
 
     if (!hfResponse.ok) {
-      // Possibly show details in logs
       const errText = await hfResponse.text();
       console.error("Hugging Face API error:", errText);
       return {
@@ -61,19 +94,16 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // 5) The HF Inference endpoint generally returns an array with { generated_text: ... }
+    // 6) Parse the AI response
     const hfData = await hfResponse.json();
-    // Example shape: [{ "generated_text": "Hello world" }]
-
     let aiReply = "No response found.";
     if (Array.isArray(hfData) && hfData[0]?.generated_text) {
       aiReply = hfData[0].generated_text;
     } else if (hfData.generated_text) {
-      // If the model returns a single object
       aiReply = hfData.generated_text;
     }
 
-    // 6) Return the AI-generated text
+    // Return final text
     return {
       statusCode: 200,
       body: JSON.stringify({ aiReply })
@@ -87,3 +117,4 @@ exports.handler = async function (event, context) {
     };
   }
 };
+
