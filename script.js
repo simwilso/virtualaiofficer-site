@@ -5,7 +5,7 @@ const sendBtn = document.getElementById('sendBtn');
 const prompts = document.getElementById('promptSuggestions').querySelectorAll('.prompt-suggestion');
 
 // GitHub Actions API Proxy (replace with your GitHub details)
-const GITHUB_PROXY_URL = "https://api.github.com/repos/simwilso/virtualaiofficer-site/dispatches";
+const GITHUB_PROXY_URL = "https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/workflows/proxy-hf-api.yml/dispatches";
 
 // Knowledge Base URL (stored in GitHub repo)
 const KNOWLEDGE_BASE_URL = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
