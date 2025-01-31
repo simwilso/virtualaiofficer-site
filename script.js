@@ -96,7 +96,6 @@ function addMessage(sender, text, applyTypingEffect = false) {
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
   try {
-    // Trigger GitHub Actions workflow
     const triggerResponse = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
