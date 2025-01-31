@@ -93,12 +93,6 @@ function addMessage(sender, text, applyTypingEffect = false) {
 }
 
 async function fetchAIResponse(userQuery) {
-  if (!userQuery || userQuery.trim() === "") {
-    console.error("User query is empty. Cannot send an empty request.");
-    addMessage('AI', "I need a valid question to process. Try asking about AI services!", true);
-    return;
-  }
-
   try {
     const response = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
@@ -109,7 +103,7 @@ async function fetchAIResponse(userQuery) {
       },
       body: JSON.stringify({
         event_type: "query-ai",
-        client_payload: { user_query: userQuery }
+        client_payload: { user_query }
       })
     });
 
@@ -118,7 +112,38 @@ async function fetchAIResponse(userQuery) {
     }
 
     console.log("Query sent to GitHub Actions, waiting for response...");
-    addMessage('AI', "Thinking...", true);
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for the workflow to complete
+
+    // Retrieve the AI-generated response
+    const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
+      headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+    });
+
+    const artifactData = await artifactResponse.json();
+
+    if (artifactData.artifacts && artifactData.artifacts.length > 0) {
+      const artifactURL = artifactData.artifacts[0].archive_download_url;
+
+      const aiResponse = await fetch(artifactURL, {
+        headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
+      });
+
+      const jsonData = await aiResponse.json();
+      console.log("AI Response:", jsonData);
+      
+      let aiReply = jsonData.generated_text || "I couldn't process that. Try again!";
+
+      if (aiReply.includes("BEGIN RESPONSE:")) {
+        aiReply = aiReply.split("BEGIN RESPONSE:")[1]?.trim();
+      }
+      if (aiReply.includes("END RESPONSE")) {
+        aiReply = aiReply.split("END RESPONSE")[0]?.trim();
+      }
+
+      addMessage('AI', aiReply, true);
+    } else {
+      throw new Error("No AI response received from GitHub Actions.");
+    }
 
   } catch (error) {
     console.error("Error fetching AI response:", error);
