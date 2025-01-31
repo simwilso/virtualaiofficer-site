@@ -92,35 +92,13 @@ function addMessage(sender, text, applyTypingEffect = false) {
   }
 }
 
-// ========== FETCH GITHUB PAT FROM BACKEND ==========
-async function getGitHubPAT() {
-  try {
-    const response = await fetch("/get-github-pat"); // Your backend proxy endpoint
-    if (!response.ok) throw new Error("Failed to fetch GitHub PAT");
-    const data = await response.json();
-    return data.GITHUB_PAT;
-  } catch (error) {
-    console.error("Error fetching GitHub PAT:", error);
-    return null;
-  }
-}
-
 // ========== FETCH AI RESPONSE VIA GITHUB ACTIONS ==========
 async function fetchAIResponse(userQuery) {
-  const GITHUB_PAT = await getGitHubPAT(); // Retrieve GitHub PAT securely
-
-  if (!GITHUB_PAT) {
-    console.error("GitHub PAT is missing. Ensure it is correctly set in GitHub Secrets.");
-    addMessage('AI', "Authentication error. Please check the GitHub API token.", true);
-    return;
-  }
-
   try {
-    // Trigger GitHub Actions workflow
+    // Trigger GitHub Actions workflow without requiring authentication
     const triggerResponse = await fetch(GITHUB_PROXY_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GITHUB_PAT}`,
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json"
       },
@@ -131,7 +109,7 @@ async function fetchAIResponse(userQuery) {
     });
 
     if (!triggerResponse.ok) {
-      throw new Error(`GitHub API Authentication Failed: ${triggerResponse.status} ${triggerResponse.statusText}`);
+      throw new Error(`GitHub API Failed: ${triggerResponse.status} ${triggerResponse.statusText}`);
     }
 
     console.log("Query sent to GitHub Actions, waiting for response...");
@@ -141,9 +119,11 @@ async function fetchAIResponse(userQuery) {
     await new Promise(resolve => setTimeout(resolve, 10000));
 
     // Fetch AI-generated response from GitHub Actions artifacts
-    const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`, {
-      headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
-    });
+    const artifactResponse = await fetch(`https://api.github.com/repos/simwilso/virtualaiofficer-site/actions/artifacts`);
+
+    if (!artifactResponse.ok) {
+      throw new Error(`Failed to fetch artifacts: ${artifactResponse.status} ${artifactResponse.statusText}`);
+    }
 
     const artifactData = await artifactResponse.json();
 
@@ -151,11 +131,14 @@ async function fetchAIResponse(userQuery) {
       throw new Error("No AI response found in artifacts.");
     }
 
+    // Retrieve the latest AI-generated response
     const artifactURL = artifactData.artifacts[0].archive_download_url;
 
-    const aiResponse = await fetch(artifactURL, {
-      headers: { "Authorization": `Bearer ${GITHUB_PAT}` }
-    });
+    const aiResponse = await fetch(artifactURL);
+
+    if (!aiResponse.ok) {
+      throw new Error(`Failed to fetch AI response: ${aiResponse.status} ${aiResponse.statusText}`);
+    }
 
     const jsonData = await aiResponse.json();
     console.log("AI Response:", jsonData);
