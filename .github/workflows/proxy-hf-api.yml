@@ -22,7 +22,7 @@ jobs:
         -o response.json
 
     - name: Upload Response
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ai-response
         path: response.json
