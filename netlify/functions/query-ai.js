@@ -2,21 +2,17 @@
 
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-function sanitizeReply(fullText) {
-  // Remove prompt lines:
-  const forbiddenPhrases = [
-    "Below is relevant info about",
-    "User question:",
-    "Answer concisely:"
-  ];
-  let sanitized = fullText;
-  forbiddenPhrases.forEach(phrase => {
-    const regex = new RegExp(`^.*${phrase}.*$`, 'mg');
-    sanitized = sanitized.replace(regex, '');
-  });
-  // Also remove everything before "Answer concisely:" 
-  sanitized = sanitized.replace(/[\s\S]*Answer concisely:\s*/i, '');
-  return sanitized.trim();
+function keepLastParagraph(fullText) {
+  // Split on blank lines, keep only last chunk
+  const paragraphs = fullText
+    .split(/\n\s*\n/)
+    .map(p => p.trim())
+    .filter(Boolean);
+
+  if (paragraphs.length === 0) {
+    return fullText.trim();
+  }
+  return paragraphs[paragraphs.length - 1];
 }
 
 exports.handler = async function (event) {
@@ -27,10 +23,7 @@ exports.handler = async function (event) {
   try {
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "Missing 'user_query'." }),
-      };
+      return { statusCode: 400, body: JSON.stringify({ error: "Missing 'user_query'." }) };
     }
 
     const HF_API_KEY = process.env.HF_API_KEY;
@@ -41,8 +34,7 @@ exports.handler = async function (event) {
       };
     }
 
-    // Build a minimal prompt
-    // (You could do chunk retrieval first if you want to pass only relevant KB paragraphs)
+    // Minimal prompt or chunk retrieval logic here:
     const prompt = `
 Below is relevant info about VirtualAIOfficer.com.au. Summarize if used; do not copy large sections.
 
@@ -51,6 +43,7 @@ User question: ${user_query}
 Answer concisely:
 `;
 
+    // Hugging Face call
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfRes = await fetch(modelURL, {
       method: "POST",
@@ -62,20 +55,16 @@ Answer concisely:
         inputs: prompt,
         parameters: {
           max_new_tokens: 80,
-          temperature: 0.1,
+          temperature: 0.0,
           top_p: 0.7,
           repetition_penalty: 2.5
-          // optionally try: stop: ["User question:", "Below is relevant info", "Answer concisely:"]
         }
       })
     });
 
     if (!hfRes.ok) {
       const err = await hfRes.text();
-      return {
-        statusCode: hfRes.status,
-        body: JSON.stringify({ error: "Hugging Face error: " + err }),
-      };
+      return { statusCode: hfRes.status, body: JSON.stringify({ error: "Hugging Face error: " + err }) };
     }
 
     const result = await hfRes.json();
@@ -86,8 +75,8 @@ Answer concisely:
       aiReply = result.generated_text;
     }
 
-    // Remove leftover prompt text
-    aiReply = sanitizeReply(aiReply);
+    // Keep only the last paragraph
+    aiReply = keepLastParagraph(aiReply);
 
     return {
       statusCode: 200,
