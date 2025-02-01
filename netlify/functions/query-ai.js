@@ -55,7 +55,7 @@ Answer concisely:
         inputs: prompt,
         parameters: {
           max_new_tokens: 80,
-          temperature: 0.0,
+          temperature: 0.1,
           top_p: 0.7,
           repetition_penalty: 2.5
         }
