@@ -36,7 +36,8 @@ function typeWriterEffect(text, speed, element) {
     if (index < htmlText.length) {
       element.innerHTML = `<strong>AI:</strong> ${htmlText.substring(0, index + 1)}`;
       index++;
-      element.scrollTop = element.scrollHeight;
+      // Scroll to bottom each time we add a character
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
       setTimeout(type, speed);
     }
   }
