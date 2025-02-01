@@ -2,96 +2,94 @@
 
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
+// A quick helper to remove repeated system text from the final response
+function sanitizeReply(text) {
+  const forbiddenPhrases = [
+    "You are a helpful AI", 
+    "Relevant Knowledge Base Info:",
+    "User's Question:",
+    // etc. add more lines that you see repeated
+  ];
+  let sanitized = text;
+  forbiddenPhrases.forEach(phrase => {
+    // remove lines that contain these phrases
+    const regex = new RegExp(`^.*${phrase}.*$`, 'mg');
+    sanitized = sanitized.replace(regex, '');
+  });
+  return sanitized.trim();
+}
+
 exports.handler = async function (event, context) {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed. Use POST." }) };
+    return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
   }
 
   try {
-    // 1) Parse user query
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: "Missing 'user_query' in request body." }),
+        body: JSON.stringify({ error: "Missing 'user_query'." }),
       };
     }
 
-    // 2) Hugging Face API key from Netlify env
     const HF_API_KEY = process.env.HF_API_KEY;
     if (!HF_API_KEY) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: "Server config error: HF_API_KEY not set." }),
+        body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }),
       };
     }
 
-    // 3) Load your knowledge base from GitHub
-    const kbUrl = "https://raw.githubusercontent.com/simwilso/virtualaiofficer-site/main/knowledge_base.md";
+    // 1) Fetch knowledge base
+    const kbUrl = "https://raw.githubusercontent.com/YourUser/YourRepo/main/knowledge_base.md";
     let knowledgeBaseText = "";
     try {
-      const kbResponse = await fetch(kbUrl);
-      if (kbResponse.ok) {
-        knowledgeBaseText = await kbResponse.text();
-      } else {
-        console.warn("Warning: KB fetch failed:", kbResponse.status, kbResponse.statusText);
+      const kbRes = await fetch(kbUrl);
+      if (kbRes.ok) {
+        knowledgeBaseText = await kbRes.text();
       }
-    } catch (e) {
-      console.warn("Warning: KB fetch error:", e);
+    } catch (err) {
+      console.warn("KB fetch failed:", err);
     }
 
-    // 4) Split the KB into paragraphs (or lines) for naive retrieval
-    //    The delimiter "\n\n" is a guess. Adjust if your MD uses single line breaks.
+    // 2) Split + naive retrieval
     const paragraphs = knowledgeBaseText
-      .split(/\n\s*\n/) // split by blank lines
+      .split(/\n\s*\n/)
       .map(p => p.trim())
-      .filter(p => p.length > 0);
+      .filter(Boolean);
 
-    // 5) A super-naive "similarity" by counting word overlap
-    function getOverlapScore(textA, textB) {
-      const setA = new Set(textA.toLowerCase().split(/\W+/));
-      const setB = new Set(textB.toLowerCase().split(/\W+/));
+    function getOverlapScore(a, b) {
+      const setA = new Set(a.toLowerCase().split(/\W+/));
+      const setB = new Set(b.toLowerCase().split(/\W+/));
       let score = 0;
-      for (let word of setA) {
-        if (setB.has(word)) score++;
-      }
+      for (const w of setA) if (setB.has(w)) score++;
       return score;
     }
 
-    // 6) Rank each paragraph by overlap with user query
-    const scoredParagraphs = paragraphs.map((p) => ({
-      text: p,
-      score: getOverlapScore(p, user_query),
+    const scored = paragraphs.map(text => ({
+      text,
+      score: getOverlapScore(text, user_query)
     }));
+    scored.sort((x, y) => y.score - x.score);
 
-    // 7) Sort descending by score
-    scoredParagraphs.sort((a, b) => b.score - a.score);
+    const topChunks = scored.slice(0, 2).map(obj => obj.text).join("\n\n");
 
-    // 8) Take the top 1 or 2 paragraphs
-    const topChunks = scoredParagraphs.slice(0, 2).map(obj => obj.text).join("\n\n");
-
-    // 9) Build a short prompt with:
-    //    - Our “system instruction” style text
-    //    - The top chunk(s) of the KB
-    //    - The user’s question
+    // 3) Minimal prompt
+    //    Note: we only add the top chunk plus user query
     const prompt = `
-You are a helpful AI for VirtualAIOfficer.com.au. 
-- Provide concise answers, relevant to the user’s question.
-- Don't repeat large sections verbatim from the KB. Summarize when needed.
-- If question is off-topic, say so politely.
+Below is relevant info about VirtualAIOfficer.com.au. Summarize if used; do not copy large sections.
 
-Relevant Knowledge Base Info:
 ${topChunks}
 
-User's Question:
-${user_query}
+User question: ${user_query}
 
-Answer (brief, relevant, no large verbatim quotes):
+Answer concisely:
 `;
 
-    // 10) Call Hugging Face Inference API with lower temperature, higher repetition penalty, shorter max tokens
+    // 4) Call Falcon with lower max tokens, high repetition penalty, zero temperature
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
-    const hfResponse = await fetch(modelURL, {
+    const hfRes = await fetch(modelURL, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${HF_API_KEY}`,
@@ -100,24 +98,24 @@ Answer (brief, relevant, no large verbatim quotes):
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          max_new_tokens: 150,
-          temperature: 0.1,
+          max_new_tokens: 80,
+          temperature: 0.0,
           top_p: 0.7,
-          repetition_penalty: 2.0
+          repetition_penalty: 2.5
         }
       })
     });
 
-    if (!hfResponse.ok) {
-      const errText = await hfResponse.text();
-      console.error("Hugging Face API error:", errText);
+    if (!hfRes.ok) {
+      const errText = await hfRes.text();
+      console.error("HF API error:", errText);
       return {
-        statusCode: hfResponse.status,
-        body: JSON.stringify({ error: `Hugging Face API error: ${errText}` }),
+        statusCode: hfRes.status,
+        body: JSON.stringify({ error: `Hugging Face error: ${errText}` }),
       };
     }
 
-    const hfData = await hfResponse.json();
+    const hfData = await hfRes.json();
     let aiReply = "No response found.";
     if (Array.isArray(hfData) && hfData[0]?.generated_text) {
       aiReply = hfData[0].generated_text;
@@ -125,16 +123,19 @@ Answer (brief, relevant, no large verbatim quotes):
       aiReply = hfData.generated_text;
     }
 
+    // 5) Post-process to remove system lines or repeated text
+    aiReply = sanitizeReply(aiReply);
+
     return {
       statusCode: 200,
       body: JSON.stringify({ aiReply })
     };
 
-  } catch (error) {
-    console.error("Error in Netlify function:", error);
+  } catch (err) {
+    console.error("Error in function:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ error: err.message })
     };
   }
 };
