@@ -2,24 +2,24 @@
 
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-// A quick helper to remove repeated system text from the final response
-function sanitizeReply(text) {
+function sanitizeReply(fullText) {
+  // Remove prompt lines:
   const forbiddenPhrases = [
-    "You are a helpful AI", 
-    "Relevant Knowledge Base Info:",
-    "User's Question:",
-    // etc. add more lines that you see repeated
+    "Below is relevant info about",
+    "User question:",
+    "Answer concisely:"
   ];
-  let sanitized = text;
+  let sanitized = fullText;
   forbiddenPhrases.forEach(phrase => {
-    // remove lines that contain these phrases
     const regex = new RegExp(`^.*${phrase}.*$`, 'mg');
     sanitized = sanitized.replace(regex, '');
   });
+  // Also remove everything before "Answer concisely:" 
+  sanitized = sanitized.replace(/[\s\S]*Answer concisely:\s*/i, '');
   return sanitized.trim();
 }
 
-exports.handler = async function (event, context) {
+exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
   }
@@ -41,53 +41,16 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // 1) Fetch knowledge base
-    const kbUrl = "https://raw.githubusercontent.com/YourUser/YourRepo/main/knowledge_base.md";
-    let knowledgeBaseText = "";
-    try {
-      const kbRes = await fetch(kbUrl);
-      if (kbRes.ok) {
-        knowledgeBaseText = await kbRes.text();
-      }
-    } catch (err) {
-      console.warn("KB fetch failed:", err);
-    }
-
-    // 2) Split + naive retrieval
-    const paragraphs = knowledgeBaseText
-      .split(/\n\s*\n/)
-      .map(p => p.trim())
-      .filter(Boolean);
-
-    function getOverlapScore(a, b) {
-      const setA = new Set(a.toLowerCase().split(/\W+/));
-      const setB = new Set(b.toLowerCase().split(/\W+/));
-      let score = 0;
-      for (const w of setA) if (setB.has(w)) score++;
-      return score;
-    }
-
-    const scored = paragraphs.map(text => ({
-      text,
-      score: getOverlapScore(text, user_query)
-    }));
-    scored.sort((x, y) => y.score - x.score);
-
-    const topChunks = scored.slice(0, 2).map(obj => obj.text).join("\n\n");
-
-    // 3) Minimal prompt
-    //    Note: we only add the top chunk plus user query
+    // Build a minimal prompt
+    // (You could do chunk retrieval first if you want to pass only relevant KB paragraphs)
     const prompt = `
 Below is relevant info about VirtualAIOfficer.com.au. Summarize if used; do not copy large sections.
-
-${topChunks}
 
 User question: ${user_query}
 
 Answer concisely:
 `;
 
-    // 4) Call Falcon with lower max tokens, high repetition penalty, zero temperature
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfRes = await fetch(modelURL, {
       method: "POST",
@@ -102,28 +65,28 @@ Answer concisely:
           temperature: 0.1,
           top_p: 0.7,
           repetition_penalty: 2.5
+          // optionally try: stop: ["User question:", "Below is relevant info", "Answer concisely:"]
         }
       })
     });
 
     if (!hfRes.ok) {
-      const errText = await hfRes.text();
-      console.error("HF API error:", errText);
+      const err = await hfRes.text();
       return {
         statusCode: hfRes.status,
-        body: JSON.stringify({ error: `Hugging Face error: ${errText}` }),
+        body: JSON.stringify({ error: "Hugging Face error: " + err }),
       };
     }
 
-    const hfData = await hfRes.json();
+    const result = await hfRes.json();
     let aiReply = "No response found.";
-    if (Array.isArray(hfData) && hfData[0]?.generated_text) {
-      aiReply = hfData[0].generated_text;
-    } else if (hfData.generated_text) {
-      aiReply = hfData.generated_text;
+    if (Array.isArray(result) && result[0]?.generated_text) {
+      aiReply = result[0].generated_text;
+    } else if (result.generated_text) {
+      aiReply = result.generated_text;
     }
 
-    // 5) Post-process to remove system lines or repeated text
+    // Remove leftover prompt text
     aiReply = sanitizeReply(aiReply);
 
     return {
@@ -132,7 +95,6 @@ Answer concisely:
     };
 
   } catch (err) {
-    console.error("Error in function:", err);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: err.message })
