@@ -1,6 +1,6 @@
 ```diff
 .header {
 -   background-color: #f0f0f0;
-+   background-color: #ff5733;
++   background-color: #ff6600;
 }
 ```
