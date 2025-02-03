@@ -346,10 +346,11 @@ app.post('/automateIssue', async (req, res) => {
 });
 
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`AI Orchestrator service listening on port ${port}`);
 });
 
-// Export the app for testing purposes
-export default app;
+// Export both app and server for testing purposes
+export { app, server };
+
 

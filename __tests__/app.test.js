@@ -1,13 +1,6 @@
 // __tests__/app.test.js
 import request from 'supertest';
-import express from 'express';
-import dotenv from 'dotenv';
-
-// Load environment variables (if needed for tests)
-dotenv.config();
-
-// Import your app (make sure your app.js exports the Express app)
-import app from '../app.js'; // Adjust the path if necessary
+import { app, server } from '../app.js'; // Adjust the path if necessary
 
 describe('AI Orchestrator Endpoints', () => {
   test('GET / (should return 404)', async () => {
@@ -23,3 +16,9 @@ describe('AI Orchestrator Endpoints', () => {
     expect(response.body.suggestion).toBeDefined();
   });
 });
+
+// After all tests, close the server so Jest can exit
+afterAll(() => {
+  server.close();
+});
+
