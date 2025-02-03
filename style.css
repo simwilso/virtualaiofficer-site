@@ -101,6 +101,7 @@ body {
   margin-bottom: 1rem; /* << SPACING ADDED HERE */
   color: #00ffe7;
   text-shadow: 0 0 5px #00ffe7;
+  font-weight: bold; /* Increased font weight for better hierarchy */
 }
 
 /* CHAT DISPLAY AREA */
