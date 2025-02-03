@@ -1,4 +1,7 @@
 ```diff
-- color: #333; /* current text color */
-+ color: #555; /* darker text color for better contrast */
+- color: #333333; /* current text color */
++ color: #000000; /* suggested darker text color */
+
+- background-color: #f5f5f5; /* current background color */
++ background-color: #ffffff; /* suggested lighter background color */
 ```
