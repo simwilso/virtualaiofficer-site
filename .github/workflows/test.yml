@@ -4,23 +4,24 @@ on:
   pull_request:
     branches: [ main ]
   push:
-    branches: [ main, develop, feature/* ]  # adjust based on your branch strategy
+    branches: [ main, develop, feature/* ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_OWNER: simwilso
+      GITHUB_REPO: virtualaiofficer-site
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '14'
-
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
-
-      - name: Run Tests
+      - name: Run tests
         run: npm test
+

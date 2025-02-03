@@ -31,26 +31,34 @@ async function analyzeIssue(issueDescription) {
     }
   ];
   
-  const response = await axios.post(
-    'https://api.openai.com/v1/chat/completions',
-    {
-      model: 'gpt-3.5-turbo',
-      messages: messages,
-      max_tokens: 100,
-      temperature: 0.3,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
+  try {
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: messages,
+        max_tokens: 100,
+        temperature: 0.3,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json'
+        }
       }
+    );
+    return response.data.choices[0].message.content.trim();
+  } catch (error) {
+    // Log detailed error info for debugging
+    if (error.response) {
+      console.error("OpenAI API Error:", error.response.data);
+      throw new Error(`OpenAI API error: ${JSON.stringify(error.response.data)}`);
     }
-  );
-  
-  return response.data.choices[0].message.content.trim();
+    throw error;
+  }
 }
 
 // Generate code diff based on a suggestion
