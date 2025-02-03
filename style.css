@@ -89,6 +89,12 @@ body {
   text-align: center;
 }
 
+.footer {
+  background-color: #f9f9f9;
+  color: #333;
+  padding: 20px;
+  text-align: center;
+}
 /* TITLE - added margin-bottom to separate from chat area */
 .chat-title {
   font-size: 1.2rem;
