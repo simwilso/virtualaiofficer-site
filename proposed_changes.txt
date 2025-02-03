@@ -1,6 +1,4 @@
 ```diff
-.header {
--   background-color: #f0f0f0;
-+   background-color: #ff6600;
-}
+- color: #333; /* current text color */
++ color: #555; /* darker text color for better contrast */
 ```
