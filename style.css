@@ -7,15 +7,14 @@
   padding: 0;
 }
 
-/* We keep 'Press Start 2P' as the fallback for the site, 
-   but we'll override in specific places with 'Share Tech Mono'. */
+/* Fallback font is 'Press Start 2P' but we use a more readable font in most cases */
 body {
   font-family: 'Press Start 2P', monospace;
   background: linear-gradient(135deg, #020024 0%, #090979 30%, #0c0c0c 100%);
   color: #fff;
-  min-height: 100vh; 
+  min-height: 100vh;
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
 }
 
 /* TOP BAR / HEADER */
@@ -23,10 +22,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1rem; 
+  padding: 0.5rem 1rem;
   background-color: rgba(0, 0, 0, 0.8);
   border-bottom: 3px solid #00ffe7;
   box-shadow: 0 0 10px #00ffe7, 0 0 20px #00ffe7;
+  flex-wrap: wrap;
 }
 
 .logo {
@@ -37,6 +37,7 @@ body {
 .social-links {
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 .social-links a {
   color: #fff;
@@ -74,7 +75,7 @@ body {
 
 /* CHAT CONTAINER */
 .chat-container {
-  flex: 1; 
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -89,19 +90,21 @@ body {
   text-align: center;
 }
 
+/* Footer */
 .footer {
   background-color: #f9f9f9;
   color: #333;
   padding: 20px;
   text-align: center;
 }
-/* TITLE - added margin-bottom to separate from chat area */
+
+/* TITLE */
 .chat-title {
   font-size: 1.2rem;
-  margin-bottom: 1rem; /* << SPACING ADDED HERE */
+  margin-bottom: 1rem;
   color: #00ffe7;
   text-shadow: 0 0 5px #00ffe7;
-  font-weight: bold; /* Increased font weight for better hierarchy */
+  font-weight: bold;
 }
 
 /* CHAT DISPLAY AREA */
@@ -118,54 +121,51 @@ body {
   font-size: 0.9rem;
 }
 
-/* MESSAGES - use a different font and line height for readability */
+/* MESSAGES */
 .chat-message {
   margin-bottom: 0.5rem;
-  line-height: 1.5; /* << ADDED for more spacing between lines */
-  font-family: 'Share Tech Mono', monospace; /* << more readable than Press Start 2P */
+  line-height: 1.5;
+  font-family: 'Share Tech Mono', monospace;
 }
-
 .chat-message strong {
   color: #00ffe7;
 }
 
 /* Logo Styling */
 .logo img {
-  height: 100px; /* Adjust height as needed */
-  width: auto;  /* Keeps aspect ratio */
+  height: 100px;
+  width: auto;
   display: block;
 }
 
-/* PROMPT SUGGESTIONS - Now smaller and horizontal */
+/* PROMPT SUGGESTIONS */
 .prompt-suggestions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem; /* Space between buttons */
+  gap: 0.5rem;
   margin-top: 0.5rem;
   padding: 0.5rem;
-  width: 100%; /* Ensures they span the full width */
+  width: 100%;
   max-width: 700px;
 }
 
-/* Make the buttons smaller */
+/* Prompt suggestion buttons */
 .prompt-suggestion {
   background-color: #ff00ff;
   color: #fff;
-  font-size: 0.7rem; /* Reduce size */
-  padding: 0.3rem 0.5rem; /* Adjust padding */
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
   box-shadow: 0 0 5px #ff00ff;
   transition: background 0.2s, box-shadow 0.2s;
-  white-space: nowrap; /* Prevents them from breaking into multiple lines */
+  white-space: nowrap;
 }
-
 .prompt-suggestion:hover {
   background-color: #c300c3;
   box-shadow: 0 0 10px #c300c3;
 }
-
 
 /* CHAT INPUT & BUTTON */
 .chat-input-container {
@@ -195,4 +195,58 @@ body {
 .chat-send-btn:hover {
   background: #00bfb2;
   box-shadow: 0 0 12px #00bfb2;
+}
+
+/* ------------------ Mobile Responsive Styles ------------------ */
+@media (max-width: 600px) {
+  /* Adjust header layout */
+  .top-bar {
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+  }
+  .social-links {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  /* Reduce font sizes for better mobile readability */
+  body {
+    font-size: 14px;
+  }
+  .chat-title {
+    font-size: 1rem;
+  }
+  .chat-display {
+    height: auto;
+    font-size: 0.8rem;
+  }
+  .book-meeting-btn {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+  }
+  /* Make the chat container full-width on small screens */
+  .chat-container {
+    width: 95%;
+    margin: 0.5rem auto;
+    padding: 0.5rem;
+  }
+}
+
+/* ------------------ Tablet Styles ------------------ */
+@media (min-width: 601px) and (max-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
+  .chat-title {
+    font-size: 1.1rem;
+  }
+  .chat-display {
+    height: 250px;
+    font-size: 0.85rem;
+  }
+  .book-meeting-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
 }
