@@ -13,7 +13,7 @@ body {
   background: url('background.webp') no-repeat center center/cover;
   /* Fallback background color */
   background-color: #1B1F23;
-  color: #f0f0f0;
+  color: #ffffff; /* Increased contrast */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -50,7 +50,7 @@ body {
 /* SOCIAL LINKS */
 .social-links a {
   background-color: #38424A;
-  color: #f0f0f0;
+  color: #ffffff; /* Increased contrast */
   padding: 0.4rem 0.8rem;
   border-radius: 4px;
   text-decoration: none;
@@ -102,7 +102,7 @@ body {
 .chat-title {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #f0f0f0;
+  color: #ffffff; /* Increased contrast */
   font-weight: bold;
   background-color: #38424A;
   padding: 0.5rem 1rem;
@@ -123,7 +123,7 @@ body {
   margin-bottom: 1rem;
   text-align: left;
   font-size: 1rem;
-  color: #f0f0f0;
+  color: #ffffff; /* Increased contrast */
 }
 
 /* CHAT MESSAGES */
@@ -148,7 +148,7 @@ body {
 }
 .prompt-suggestion {
   background-color: #38424A;
-  color: #f0f0f0;
+  color: #ffffff; /* Increased contrast */
   font-size: 0.9rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -174,7 +174,7 @@ body {
   border: 1px solid #38424A;
   border-radius: 4px;
   background-color: #1B1F23;
-  color: #f0f0f0;
+  color: #ffffff; /* Increased contrast */
 }
 .chat-send-btn {
   padding: 0.5rem 1rem;
@@ -194,7 +194,7 @@ body {
 /* FOOTER */
 .footer {
   background-color: #38424A;
-  color: #f0f0f0;
+  color: #ffffff; /* Increased contrast */
   padding: 20px;
   text-align: center;
 }
