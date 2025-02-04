@@ -9,10 +9,7 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  /* Set the background image on the entire page */
-  background: url('background.webp') no-repeat center center/cover;
-  /* Optionally, add a fallback background color */
-  background-color: #1B1F23;
+  background-color: #1B1F23; /* Dark charcoal */
   color: #f0f0f0;
   min-height: 100vh;
   display: flex;
@@ -26,8 +23,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background-color: rgba(56, 66, 74, 0.95); /* Semi-opaque for readability */
-  border-bottom: 2px solid #D61F26;
+  background-color: #38424A; /* Muted dark slate */
+  border-bottom: 2px solid #B1181E; /* Subtle muted red */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
@@ -41,6 +38,7 @@ body {
   gap: 1rem;
 }
 
+/* Logo */
 .logo img {
   height: 80px;
   width: auto;
@@ -48,7 +46,7 @@ body {
 
 /* SOCIAL LINKS */
 .social-links a {
-  background: #38424A;
+  background-color: #38424A;
   color: #f0f0f0;
   padding: 0.4rem 0.8rem;
   border-radius: 4px;
@@ -58,13 +56,13 @@ body {
 }
 
 .social-links a:hover {
-  background: #D61F26;
-  box-shadow: 0 0 8px rgba(214, 31, 38, 0.6);
+  background-color: #B1181E;
+  box-shadow: 0 0 8px rgba(177, 24, 30, 0.6);
 }
 
 /* BOOK MEETING BUTTON */
 .book-meeting-btn {
-  background-color: #D61F26;
+  background-color: #B1181E; /* Muted red */
   color: #fff;
   padding: 0.6rem 1.2rem;
   font-size: 0.9rem;
@@ -74,10 +72,9 @@ body {
   text-decoration: none;
   transition: background 0.3s, box-shadow 0.3s;
 }
-
 .book-meeting-btn:hover {
-  background-color: #B1181E;
-  box-shadow: 0 0 10px rgba(214, 31, 38, 0.7);
+  background-color: #9A1318; /* Slightly darker muted red */
+  box-shadow: 0 0 10px rgba(154, 19, 24, 0.7);
 }
 
 /* MAIN CHAT CONTAINER */
@@ -86,11 +83,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   width: 90%;
   max-width: 800px;
-  /* Use a semi-transparent background so the image shows through a bit */
-  background-color: rgba(42, 46, 50, 0.95);
+  background-color: rgba(42, 46, 50, 0.95); /* Semi-opaque dark overlay */
   border: 1px solid #38424A;
   border-radius: 8px;
   padding: 1.5rem;
@@ -98,23 +94,24 @@ body {
   text-align: center;
 }
 
-/* CHAT TITLE */
+/* CHAT TITLE (Heading) */
 .chat-title {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #D61F26;
+  color: #f0f0f0;  /* Light text */
   font-weight: bold;
-  background-color: rgba(214, 31, 38, 0.1);
+  background-color: #38424A; /* Dark slate background */
   padding: 0.5rem 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-left: 4px solid #B1181E;  /* Subtle accent border in muted red */
 }
 
 /* CHAT DISPLAY AREA */
 .chat-display {
   width: 100%;
   height: 300px;
-  background-color: transparent; /* Let the chat container background show */
+  background-color: #1B1F23;
   border: 1px solid #38424A;
   border-radius: 8px;
   overflow-y: auto;
@@ -131,7 +128,7 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 .chat-message strong {
-  color: #D61F26;
+  color: #B1181E;
 }
 
 /* PROMPT SUGGESTIONS */
@@ -155,8 +152,8 @@ body {
   transition: background 0.2s, box-shadow 0.2s;
 }
 .prompt-suggestion:hover {
-  background-color: #D61F26;
-  box-shadow: 0 0 8px rgba(214, 31, 38, 0.6);
+  background-color: #B1181E;
+  box-shadow: 0 0 8px rgba(177, 24, 30, 0.6);
 }
 
 /* CHAT INPUT & SEND BUTTON */
@@ -177,7 +174,7 @@ body {
 }
 .chat-send-btn {
   padding: 0.5rem 1rem;
-  background-color: #D61F26;
+  background-color: #B1181E;
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -186,5 +183,67 @@ body {
   transition: background 0.3s, box-shadow 0.3s;
 }
 .chat-send-btn:hover {
-  background-color: #B1181E;
-  box-shadow: 0 0 12px rgba(214, 31, 38, 0
+  background-color: #9A1318;
+  box-shadow: 0 0 12px rgba(154, 19, 24, 0.7);
+}
+
+/* FOOTER */
+.footer {
+  background-color: #38424A;
+  color: #f0f0f0;
+  padding: 20px;
+  text-align: center;
+}
+
+/* ------------------ Responsive Styles ------------------ */
+
+/* Mobile Devices (max-width: 600px) */
+@media (max-width: 600px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+  }
+  .header-right {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  body {
+    font-size: 14px;
+  }
+  .chat-title {
+    font-size: 1.2rem;
+  }
+  .chat-display {
+    height: auto;
+    font-size: 0.9rem;
+  }
+  .book-meeting-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  .chat-container {
+    width: 95%;
+    margin: 1rem auto;
+    padding: 1rem;
+  }
+}
+
+/* Tablets (min-width: 601px and max-width: 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
+  .chat-title {
+    font-size: 1.3rem;
+  }
+  .chat-display {
+    height: 250px;
+    font-size: 0.95rem;
+  }
+  .book-meeting-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+}
