@@ -31,38 +31,35 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-9PB3W1XXPE');
 </script>
 <body>
 
   <!-- TOP BAR / HEADER -->
   <header class="top-bar">
-    <div class="logo">
-      <img src="VAIOLogo.png" alt="Virtual AI Officer Logo">
+    <div class="header-left">
+      <div class="logo">
+        <img src="VAIOLogo.png" alt="Virtual AI Officer Logo">
+      </div>
     </div>
-    <nav class="social-links">
-      <a href="https://x.com/simwilso" target="_blank">Twitter</a>
-      <a href="https://www.linkedin.com/in/simon-wilson-a3a70a3" target="_blank">LinkedIn</a>
-      <a href="https://www.youtube.com/channel/UCxhG3bcP7BX_rYDvgg-PSyQ" target="_blank">YouTube</a>
-    </nav>
-    <a 
-      href="https://calendly.com/simon-vru/60min"
-      target="_blank"
-      class="book-meeting-btn"
-    >
-      Book a Meeting
-    </a>
+    <div class="header-right">
+      <nav class="social-links">
+        <a href="https://x.com/simwilso" target="_blank">Twitter</a>
+        <a href="https://www.linkedin.com/in/simon-wilson-a3a70a3" target="_blank">LinkedIn</a>
+        <a href="https://www.youtube.com/channel/UCxhG3bcP7BX_rYDvgg-PSyQ" target="_blank">YouTube</a>
+      </nav>
+      <a href="https://calendly.com/simon-vru/60min" target="_blank" class="book-meeting-btn">Book a Meeting</a>
+    </div>
   </header>
 
   <!-- MAIN CHAT CONTAINER -->
   <div class="chat-container">
     <!-- TITLE -->
     <div class="chat-title">Meet your Virtual AI Officer</div>
-
+    
     <!-- CHAT DISPLAY -->
     <div class="chat-display" id="chatDisplay"></div>
-
+    
     <!-- PROMPT SUGGESTIONS -->
     <div class="prompt-suggestions" id="promptSuggestions">
       <div class="prompt-suggestion">How can AI help my specific business?</div>
@@ -70,7 +67,7 @@
       <div class="prompt-suggestion">Which tasks can AI automate right now?</div>
       <div class="prompt-suggestion">How do I ensure AI is used responsibly?</div>
     </div>
-
+    
     <!-- CHAT INPUT -->
     <div class="chat-input-container">
       <input type="text" class="chat-input" id="userInput" placeholder="Ask me anything..." />
@@ -81,3 +78,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
