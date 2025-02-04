@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="canonical" href="https://www.virtualaiofficer.com.au/">
   
-  <!-- Open Graph Tags for social sharing -->
+  <!-- Open Graph Tags -->
   <meta property="og:title" content="Virtual AI Officer – Innovative AI-Driven Solutions">
   <meta property="og:description" content="Virtual AI Officer provides AI strategy consulting, automation tools, education, and more.">
   <meta property="og:url" content="https://www.virtualaiofficer.com.au/">
@@ -21,48 +21,37 @@
   <meta name="twitter:image" content="https://www.virtualaiofficer.com.au/VAIOLogo.png">
   
   <!-- Fonts and Styles -->
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="VAIOLogo.png">
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9PB3W1XXPE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-9PB3W1XXPE');
-</script>
 <body>
 
   <!-- TOP BAR / HEADER -->
   <header class="top-bar">
-    <div class="logo">
-      <img src="VAIOLogo.png" alt="Virtual AI Officer Logo">
+    <div class="header-left">
+      <div class="logo">
+        <img src="VAIOLogo.png" alt="Virtual AI Officer Logo">
+      </div>
     </div>
-    <nav class="social-links">
-      <a href="https://x.com/simwilso" target="_blank">Twitter</a>
-      <a href="https://www.linkedin.com/in/simon-wilson-a3a70a3" target="_blank">LinkedIn</a>
-      <a href="https://www.youtube.com/channel/UCxhG3bcP7BX_rYDvgg-PSyQ" target="_blank">YouTube</a>
-    </nav>
-    <a 
-      href="https://calendly.com/simon-vru/60min"
-      target="_blank"
-      class="book-meeting-btn"
-    >
-      Book a Meeting
-    </a>
+    <div class="header-right">
+      <nav class="social-links">
+        <a href="https://x.com/simwilso" target="_blank">Twitter</a>
+        <a href="https://www.linkedin.com/in/simon-wilson-a3a70a3" target="_blank">LinkedIn</a>
+        <a href="https://www.youtube.com/channel/UCxhG3bcP7BX_rYDvgg-PSyQ" target="_blank">YouTube</a>
+      </nav>
+      <a href="https://calendly.com/simon-vru/60min" target="_blank" class="book-meeting-btn">Book a Meeting</a>
+    </div>
   </header>
 
   <!-- MAIN CHAT CONTAINER -->
   <div class="chat-container">
     <!-- TITLE -->
     <div class="chat-title">Meet your Virtual AI Officer</div>
-
+    
     <!-- CHAT DISPLAY -->
     <div class="chat-display" id="chatDisplay"></div>
-
+    
     <!-- PROMPT SUGGESTIONS -->
     <div class="prompt-suggestions" id="promptSuggestions">
       <div class="prompt-suggestion">How can AI help my specific business?</div>
@@ -70,7 +59,7 @@
       <div class="prompt-suggestion">Which tasks can AI automate right now?</div>
       <div class="prompt-suggestion">How do I ensure AI is used responsibly?</div>
     </div>
-
+    
     <!-- CHAT INPUT -->
     <div class="chat-input-container">
       <input type="text" class="chat-input" id="userInput" placeholder="Ask me anything..." />
