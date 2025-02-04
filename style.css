@@ -10,7 +10,7 @@
 body {
   font-family: 'Poppins', sans-serif;
   /* Set the background image on the entire page */
-  background: url('images/background.webp') no-repeat center center/cover;
+  background: url('background.webp') no-repeat center center/cover;
   /* Optionally, add a fallback background color */
   background-color: #1B1F23;
   color: #f0f0f0;
