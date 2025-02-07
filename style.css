@@ -1,7 +1,7 @@
 /* style.css */
 
 /* BASIC RESET & GLOBAL STYLES */
- {
+ { 
  box-sizing: border-box;
  margin: 0;
  padding: 0;
@@ -251,4 +251,13 @@ body {
  padding: 0.5rem 1rem;
  font-size: 0.85rem;
  }
+}
+
+/* FOCUS STYLES FOR ACCESSIBLE INTERACTIVE ELEMENTS */
+.chat-input:focus,
+.chat-send-btn:focus,
+.book-meeting-btn:focus,
+.social-links a:focus {
+ outline: 2px solid #B1181E;
+ outline-offset: 2px;
 }
