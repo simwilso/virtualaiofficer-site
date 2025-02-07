@@ -9,11 +9,11 @@
 
 body {
  font-family: 'Poppins', sans-serif;
- / Set the background image on the entire page /
+ /* Set the background image on the entire page */
  background: url('background.webp') no-repeat center center/cover;
- / Fallback background color /
+ /* Fallback background color */
  background-color: #1B1F23;
- color: #ffffff; / Increased contrast /
+ color: #ffffff; /* Increased contrast */
  min-height: 100vh;
  display: flex;
  flex-direction: column;
