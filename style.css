@@ -1,6 +1,6 @@
 /* style.css */
 
-/ BASIC RESET & GLOBAL STYLES /
+/* BASIC RESET & GLOBAL STYLES */
  {
  box-sizing: border-box;
  margin: 0;
@@ -115,7 +115,7 @@ body {
 .chat-display {
  width: 100%;
  height: 300px;
- background-color: transparent;
+ background-color: rgba(0, 0, 0, 0.5);
  border: 1px solid #38424A;
  border-radius: 8px;
  overflow-y: auto;
