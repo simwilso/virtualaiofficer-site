@@ -17,7 +17,8 @@ body {
  min-height: 100vh;
  display: flex;
  flex-direction: column;
- line-height: 1.6;
+ font-size: 18px;
+ line-height: 1.8;
 }
 
 / HEADER / TOP BAR /
@@ -149,7 +150,7 @@ body {
 .prompt-suggestion {
  background-color: #38424A;
  color: #ffffff; / Increased contrast /
- font-size: 0.9rem;
+ font-size: 1rem;
  padding: 0.5rem 1rem;
  border-radius: 4px;
  cursor: pointer;
@@ -214,7 +215,7 @@ body {
  margin-top: 0.5rem;
  }
  body {
- font-size: 14px;
+ font-size: 16px;
  }
  .chat-title {
  font-size: 1.2rem;
@@ -234,10 +235,10 @@ body {
  }
 }
 
-/ Tablets (min-width: 601px and max-width: 1024px) /
+/ Tablets (min-width: 601px and max-width: 1024px) */
 @media (min-width: 601px) and (max-width: 1024px) {
  body {
- font-size: 15px;
+ font-size: 17px;
  }
  .chat-title {
  font-size: 1.3rem;
@@ -250,10 +251,4 @@ body {
  padding: 0.5rem 1rem;
  font-size: 0.85rem;
  }
-}
-
-/ Focus styles for interactive elements */
-a:focus, button:focus {
- outline: 2px solid #B1181E;
- outline-offset: 2px;
 }
