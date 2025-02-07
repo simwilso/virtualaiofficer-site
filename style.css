@@ -1,4 +1,4 @@
-/* style.css /
+/* style.css */
 
 / BASIC RESET & GLOBAL STYLES /
  {
@@ -9,7 +9,7 @@
 
 body {
  font-family: 'Poppins', sans-serif;
- /* Set the background image on the entire page /
+ / Set the background image on the entire page /
  background: url('background.webp') no-repeat center center/cover;
  / Fallback background color /
  background-color: #1B1F23;
