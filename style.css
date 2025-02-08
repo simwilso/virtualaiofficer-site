@@ -56,7 +56,7 @@ body {
  border-radius: 4px;
  text-decoration: none;
  font-size: 0.9rem;
- transition: background 0.3s, box-shadow 0.3s;
+ transition: background 0.3s, box-shadow 0.3s, outline 0.3s ease-in-out, outline-offset 0.3s ease-in-out;
 }
 
 .social-links a:hover {
@@ -74,7 +74,7 @@ body {
  border-radius: 4px;
  cursor: pointer;
  text-decoration: none;
- transition: background 0.3s, box-shadow 0.3s;
+ transition: background 0.3s, box-shadow 0.3s, outline 0.3s ease-in-out, outline-offset 0.3s ease-in-out;
 }
 .book-meeting-btn:hover {
  background-color: #9A1318;
@@ -176,6 +176,7 @@ body {
  border-radius: 4px;
  background-color: #1B1F23;
  color: #ffffff;
+ transition: outline 0.3s ease-in-out, outline-offset 0.3s ease-in-out;
 }
 .chat-send-btn {
  padding: 0.5rem 1rem;
@@ -185,7 +186,7 @@ body {
  border-radius: 4px;
  font-size: 1rem;
  cursor: pointer;
- transition: background 0.3s, box-shadow 0.3s;
+ transition: background 0.3s, box-shadow 0.3s, outline 0.3s ease-in-out, outline-offset 0.3s ease-in-out;
 }
 .chat-send-btn:hover {
  background-color: #9A1318;
