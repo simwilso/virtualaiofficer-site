@@ -15,7 +15,7 @@ async function loadDocuments() {
   // Load and cache the proposal PDF text
   if (!proposalPDFText) {
     try {
-      const pdfPath = path.resolve(__dirname, '..', 'private', 'proposal.pdf');
+      const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
       const pdfBuffer = fs.readFileSync(pdfPath);
       const data = await pdf(pdfBuffer);
       proposalPDFText = data.text;
@@ -29,7 +29,7 @@ async function loadDocuments() {
   // Load and cache the process document text
   if (!processDocText) {
     try {
-      const processPath = path.resolve(__dirname, '..', 'private', 'process_document.md');
+      const processPath = path.resolve(__dirname, '..', '..', 'private', 'process_document.md');
       processDocText = fs.readFileSync(processPath, 'utf8');
       console.log('Loaded process document text.');
     } catch (error) {
