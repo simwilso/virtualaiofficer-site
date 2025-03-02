@@ -44,6 +44,7 @@ function keepLastParagraph(text) {
 }
 
 exports.handler = async (event, context) => {
+  console.log("query-ai-secure function invoked at:", new Date().toISOString());
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
