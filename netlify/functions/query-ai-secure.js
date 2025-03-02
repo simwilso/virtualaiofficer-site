@@ -6,10 +6,11 @@ const fetch = require('node-fetch'); // Ensure node-fetch@2 is installed
 let proposalPDFText = null;
 let processDocText = null;
 
-// Function to load the secure documents from the private folder
+// Load secure documents from the private folder
 async function loadDocuments() {
   if (!proposalPDFText) {
     try {
+      // __dirname is in netlify/functions; go two levels up to repo root, then into "private"
       const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
       console.log('Using PDF path:', pdfPath);
       const pdfBuffer = fs.readFileSync(pdfPath);
@@ -34,7 +35,7 @@ async function loadDocuments() {
   }
 }
 
-// Helper function to extract the final answer (can be customized further)
+// Helper function to trim the answer
 function extractFinalAnswer(text) {
   return text.trim();
 }
@@ -63,21 +64,23 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }) };
     }
     
-    // Build the combined prompt with explicit instructions:
-    // The prompt instructs the model to output only a concise summary (approx. 200 words) and nothing else.
-    const combinedPrompt = `You are an expert summarizer. Based solely on the context provided below, generate a concise, one-paragraph summary of the proposal in about 200 words. Do not include any of the context or prompt text in your answer—output only the summary.
+    // Build a revised combined prompt
+    // We clearly delineate the context and instruct the model to ignore it.
+    const combinedPrompt = `Below is some context that you must use ONLY to generate a concise summary.
+Do NOT output or refer to any of the text between the delimiters.
+Your answer must consist solely of a one-paragraph summary of the proposal, about 200 words.
 
-Context:
+[Context Start]
 --- Proposal Document (PDF) ---
 ${proposalPDFText}
 
 --- Process & Team Document ---
 ${processDocText}
+[Context End]
 
-User's Question:
-${user_query}
+User's Question: ${user_query}
 
-Answer:`;
+Now, provide only the summary of the proposal. Do not include any of the context or prompt instructions in your answer.`;
     
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
     
@@ -92,7 +95,7 @@ Answer:`;
       body: JSON.stringify({
         inputs: combinedPrompt,
         parameters: {
-          max_new_tokens: 200, // Adjust token limit as needed
+          max_new_tokens: 200, // Increase if needed
           temperature: 0.1,
           top_p: 0.7,
           repetition_penalty: 2.5
@@ -116,8 +119,9 @@ Answer:`;
       aiReply = result.generated_text;
     }
     
-    // Process the output to extract only the summary answer
+    // Process the output to extract only the final summary answer
     aiReply = extractFinalAnswer(aiReply);
+    
     console.log("Final AI Reply (first 200 chars):", aiReply.substring(0, 200));
     
     return { statusCode: 200, body: JSON.stringify({ aiReply }) };
