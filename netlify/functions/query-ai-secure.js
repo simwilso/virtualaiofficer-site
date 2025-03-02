@@ -11,7 +11,7 @@ async function loadDocuments() {
   // Load proposal PDF text if not already loaded
   if (!proposalPDFText) {
     try {
-      // __dirname is in netlify/functions, so go two levels up to reach repo root then into private
+      // __dirname is in netlify/functions; go two levels up to repo root, then into "private"
       const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
       console.log('Using PDF path:', pdfPath);
       const pdfBuffer = fs.readFileSync(pdfPath);
@@ -37,11 +37,8 @@ async function loadDocuments() {
   }
 }
 
-// Helper function to extract the final paragraph (if needed)
-// In some cases, the model may echo a lot of the prompt.
-// You can customize this function to pick the best portion of the answer.
+// Helper function to extract the final answer (if needed, customize further)
 function extractFinalAnswer(text) {
-  // For a start, simply return the text trimmed.
   return text.trim();
 }
 
@@ -51,7 +48,7 @@ exports.handler = async (event, context) => {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
   }
   
-  // Authorization Check – adjust if needed
+  // Authorization Check
   const authHeader = event.headers.authorization;
   if (!authHeader) {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
@@ -68,14 +65,14 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing 'user_query'." }) };
     }
     
-    // Retrieve your Hugging Face API key from environment variables
+    // Retrieve the Hugging Face API key from environment variables
     const HF_API_KEY = process.env.HF_API_KEY;
     if (!HF_API_KEY) {
       return { statusCode: 500, body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }) };
     }
     
-    // Build the combined prompt – instruct the model to answer using only the secure documents
-    const combinedPrompt = `Answer the following question using ONLY the information from the documents below.
+    // Build the combined prompt with explicit instructions:
+    const combinedPrompt = `Using only the information provided in the documents below, provide a concise one-paragraph summary of the proposal. Do not repeat any text from the documents; only output your summary.
 
 --- Proposal Document (PDF) ---
 ${proposalPDFText}
@@ -86,9 +83,9 @@ ${processDocText}
 User's Question:
 ${user_query}
 
-Answer concisely:
-`;
-    // Log a snippet of the prompt for debugging
+Summary:`;
+    
+    // Log the first 200 characters of the prompt for debugging
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
     
     // Call the Hugging Face LLM
@@ -119,7 +116,6 @@ Answer concisely:
     const result = await hfRes.json();
     console.log("Hugging Face result:", result);
     
-    // Extract the AI reply from the result structure
     let aiReply = "No response found.";
     if (Array.isArray(result) && result[0]?.generated_text) {
       aiReply = result[0].generated_text;
@@ -127,10 +123,10 @@ Answer concisely:
       aiReply = result.generated_text;
     }
     
-    // Use our helper to extract the final answer
+    // Extract the final answer (you can further process if needed)
     aiReply = extractFinalAnswer(aiReply);
     
-    console.log("Final AI Reply:", aiReply.substring(0, 200)); // log the first 200 chars
+    console.log("Final AI Reply (first 200 chars):", aiReply.substring(0, 200));
     
     return { statusCode: 200, body: JSON.stringify({ aiReply }) };
     
