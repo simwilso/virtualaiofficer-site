@@ -1,65 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <title>Virtual AI Officer – Innovative AI-Driven Solutions</title>
- <meta name="description" content="Virtual AI Officer provides AI strategy consulting, automation tools, education, and more. Discover innovative solutions for your business.">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <link rel="canonical" href="https://www.virtualaiofficer.com.au"> <!-- Open Graph Tags -->
- <meta property="og:title" content="Virtual AI Officer – Innovative AI-Driven Solutions">
- <meta property="og:description" content="Virtual AI Officer provides AI strategy consulting, automation tools, education, and more.">
- <meta property="og:url" content="https://www.virtualaiofficer.com.au"> <meta property="og:type" content="website">
- <meta property="og:image" content="https://www.virtualaiofficer.com.au/VAIOLogo.png"> <!-- Twitter Card Tags -->
- <meta name="twitter:card" content="summary_large_image">
- <meta name="twitter:title" content="Virtual AI Officer – Innovative AI-Driven Solutions">
- <meta name="twitter:description" content="Virtual AI Officer provides AI strategy consulting, automation tools, education, and more.">
- <meta name="twitter:image" content="https://www.virtualaiofficer.com.au/VAIOLogo.png"> <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
- <link rel="stylesheet" href="style.css">
- <link rel="icon" type="image/png" href="VAIOLogo.png">
+  <meta charset="UTF-8">
+  <title>Virtual AI Officer – Innovative AI-Driven Solutions</title>
+  <meta name="description" content="Virtual AI Officer provides AI strategy consulting, automation tools, education, and more. Discover innovative solutions for your business.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="https://www.virtualaiofficer.com.au">
+  <meta property="og:title" content="Virtual AI Officer – Innovative AI-Driven Solutions">
+  <meta property="og:description" content="Virtual AI Officer provides AI strategy consulting, automation tools, education, and more.">
+  <meta property="og:url" content="https://www.virtualaiofficer.com.au">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.virtualaiofficer.com.au/VAIOLogo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Virtual AI Officer – Innovative AI-Driven Solutions">
+  <meta name="twitter:description" content="Virtual AI Officer provides AI strategy consulting, automation tools, education, and more.">
+  <meta name="twitter:image" content="https://www.virtualaiofficer.com.au/VAIOLogo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="VAIOLogo.png">
 </head>
 <body>
+  <!-- TOP BAR / HEADER -->
+  <header class="top-bar">
+    <div class="header-left">
+      <div class="logo">
+        <img src="VAIOLogo.png" alt="Virtual AI Officer Logo">
+      </div>
+    </div>
+    <div class="header-right">
+      <nav class="social-links">
+        <a href="https://x.com/simwilso" target="_blank" rel="noopener noreferrer">Twitter</a>
+        <a href="https://www.linkedin.com/in/simon-wilson-a3a70a3" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href="https://www.youtube.com/channel/UCxhG3bcP7BX_rYDvgg-PSyQ" target="_blank" rel="noopener noreferrer">YouTube</a>
+      </nav>
+      <a href="https://calendly.com/simon-vru/60min" target="_blank" class="book-meeting-btn" rel="noopener noreferrer">Book a Meeting</a>
+      <!-- Auth0 Login/Logout Button -->
+      <button id="auth-btn" class="book-meeting-btn" style="margin-left:1rem; display:none;"></button>
+    </div>
+  </header>
 
- <!-- TOP BAR / HEADER -->
- <header class="top-bar">
- <div class="header-left">
- <div class="logo">
- <img src="VAIOLogo.png" alt="Virtual AI Officer Logo">
- </div>
- </div>
- <div class="header-right">
- <nav class="social-links">
- <a href="https://x.com/simwilso" target="_blank" rel="noopener noreferrer">Twitter</a>
- <a href="https://www.linkedin.com/in/simon-wilson-a3a70a3\" target="_blank" rel="noopener noreferrer">LinkedIn</a>
- <a href="https://www.youtube.com/channel/UCxhG3bcP7BX_rYDvgg-PSyQ" target="_blank" rel="noopener noreferrer">YouTube</a>
- </nav>
- <a href="https://calendly.com/simon-vru/60min" target="_blank" class="book-meeting-btn" rel="noopener noreferrer">Book a Meeting</a>
- </div>
- </header>
+  <!-- MAIN CHAT CONTAINER -->
+  <div class="chat-container">
+    <!-- TITLE -->
+    <div class="chat-title">Meet your Virtual AI Officer</div>
+    
+    <!-- CHAT DISPLAY -->
+    <div class="chat-display" id="chatDisplay"></div>
+    
+    <!-- PROMPT SUGGESTIONS -->
+    <div class="prompt-suggestions" id="promptSuggestions">
+      <div class="prompt-suggestion">How can AI help my specific business?</div>
+      <div class="prompt-suggestion">What is Edge AI, and why does it matter?</div>
+      <div class="prompt-suggestion">Which tasks can AI automate right now?</div>
+      <div class="prompt-suggestion">How do I ensure AI is used responsibly?</div>
+    </div>
+    
+    <!-- CHAT INPUT -->
+    <div class="chat-input-container">
+      <input type="text" class="chat-input" id="userInput" placeholder="Ask me anything..." />
+      <button class="chat-send-btn" id="sendBtn">Send</button>
+    </div>
+  </div>
 
- <!-- MAIN CHAT CONTAINER -->
- <div class="chat-container">
- <!-- TITLE -->
- <div class="chat-title">Meet your Virtual AI Officer</div>
- 
- <!-- CHAT DISPLAY -->
- <div class="chat-display" id="chatDisplay"></div>
- 
- <!-- PROMPT SUGGESTIONS -->
- <div class="prompt-suggestions" id="promptSuggestions">
- <div class="prompt-suggestion">How can AI help my specific business?</div>
- <div class="prompt-suggestion">What is Edge AI, and why does it matter?</div>
- <div class="prompt-suggestion">Which tasks can AI automate right now?</div>
- <div class="prompt-suggestion">How do I ensure AI is used responsibly?</div>
- </div>
- 
- <!-- CHAT INPUT -->
- <div class="chat-input-container">
- <input type="text" class="chat-input" id="userInput" placeholder="Ask me anything..." />
- <button class="chat-send-btn" id="sendBtn">Send</button>
- </div>
- </div>
+  <!-- Include Auth0 SPA JS -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/1.22/auth0-spa-js.production.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Replace these with your Auth0 credentials
+    const auth0Domain = 'YOUR_DOMAIN.auth0.com';
+    const auth0ClientId = 'YOUR_CLIENT_ID';
 
- <script src="script.js"></script>
- <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    let auth0Client = null;
+
+    const configureClient = async () => {
+      auth0Client = await createAuth0Client({
+        domain: auth0Domain,
+        client_id: auth0ClientId,
+        redirect_uri: window.location.origin
+      });
+    };
+
+    const updateUI = async () => {
+      const isAuthenticated = await auth0Client.isAuthenticated();
+      const authBtn = document.getElementById('auth-btn');
+      if (isAuthenticated) {
+        // If logged in, show logout button and fetch user data if needed
+        authBtn.textContent = 'Logout';
+        authBtn.style.display = 'inline-block';
+      } else {
+        authBtn.textContent = 'Login';
+        authBtn.style.display = 'inline-block';
+      }
+    };
+
+    // Handle the redirect callback from Auth0 if present in the URL
+    const handleRedirectCallback = async () => {
+      if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
+        await auth0Client.handleRedirectCallback();
+        window.history.replaceState({}, document.title, "/");
+      }
+    };
+
+    window.addEventListener('load', async () => {
+      await configureClient();
+      await handleRedirectCallback();
+      await updateUI();
+
+      // Set up the auth button click handler
+      document.getElementById('auth-btn').addEventListener('click', async () => {
+        const isAuthenticated = await auth0Client.isAuthenticated();
+        if (isAuthenticated) {
+          // Logout and redirect to homepage
+          await auth0Client.logout({ returnTo: window.location.origin });
+        } else {
+          // Login with redirect
+          await auth0Client.loginWithRedirect();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
