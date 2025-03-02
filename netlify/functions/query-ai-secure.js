@@ -1,17 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 const pdf = require('pdf-parse');
-const fetch = require('node-fetch'); // Ensure node-fetch version 2 is installed
+const fetch = require('node-fetch'); // Ensure node-fetch@2 is installed
 
 let proposalPDFText = null;
 let processDocText = null;
 
-// Function to load the secure documents from the private folder
+// Load secure documents from the private folder
 async function loadDocuments() {
-  // Load the proposal PDF text if not already loaded
+  // Load proposal PDF text if not already loaded
   if (!proposalPDFText) {
     try {
-      // __dirname is in netlify/functions, so go two levels up to reach the repo root, then into "private"
+      // __dirname is in netlify/functions, so go two levels up to reach repo root then into private
       const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
       console.log('Using PDF path:', pdfPath);
       const pdfBuffer = fs.readFileSync(pdfPath);
@@ -24,7 +24,7 @@ async function loadDocuments() {
     }
   }
   
-  // Load the process document text if not already loaded
+  // Load process document text if not already loaded
   if (!processDocText) {
     try {
       const processPath = path.resolve(__dirname, '..', '..', 'private', 'process_document.md');
@@ -37,43 +37,44 @@ async function loadDocuments() {
   }
 }
 
-// Helper function to keep only the last paragraph of the response
-function keepLastParagraph(text) {
-  const paragraphs = text.split(/\n\s*\n/);
-  return paragraphs[paragraphs.length - 1].trim();
+// Helper function to extract the final paragraph (if needed)
+// In some cases, the model may echo a lot of the prompt.
+// You can customize this function to pick the best portion of the answer.
+function extractFinalAnswer(text) {
+  // For a start, simply return the text trimmed.
+  return text.trim();
 }
 
 exports.handler = async (event, context) => {
-  console.log("query-ai-secure function invoked at:", new Date().toISOString());
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
   }
   
-  // ===== Authorization Check =====
+  // Authorization Check – adjust if needed
   const authHeader = event.headers.authorization;
   if (!authHeader) {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
   }
   
   try {
-    // Load the secure documents (proposal PDF and process document)
+    console.log("query-ai-secure invoked at:", new Date().toISOString());
+    // Load the secure documents (proposal PDF & process document)
     await loadDocuments();
-    
-    // Parse the incoming request body
+
+    // Parse the request body
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing 'user_query'." }) };
     }
     
-    // Retrieve the Hugging Face API key from environment variables
+    // Retrieve your Hugging Face API key from environment variables
     const HF_API_KEY = process.env.HF_API_KEY;
     if (!HF_API_KEY) {
       return { statusCode: 500, body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }) };
     }
     
-    // ===== Build the Combined Prompt =====
-    // Instruct the model to answer using ONLY the information from the secure documents.
+    // Build the combined prompt – instruct the model to answer using only the secure documents
     const combinedPrompt = `Answer the following question using ONLY the information from the documents below.
 
 --- Proposal Document (PDF) ---
@@ -87,10 +88,10 @@ ${user_query}
 
 Answer concisely:
 `;
-    // Log the first 200 characters of the prompt (for debugging)
+    // Log a snippet of the prompt for debugging
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
     
-    // ===== Call the Hugging Face LLM =====
+    // Call the Hugging Face LLM
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfRes = await fetch(modelURL, {
       method: "POST",
@@ -118,6 +119,7 @@ Answer concisely:
     const result = await hfRes.json();
     console.log("Hugging Face result:", result);
     
+    // Extract the AI reply from the result structure
     let aiReply = "No response found.";
     if (Array.isArray(result) && result[0]?.generated_text) {
       aiReply = result[0].generated_text;
@@ -125,8 +127,10 @@ Answer concisely:
       aiReply = result.generated_text;
     }
     
-    // Optionally, keep only the last paragraph of the AI response
-    aiReply = keepLastParagraph(aiReply);
+    // Use our helper to extract the final answer
+    aiReply = extractFinalAnswer(aiReply);
+    
+    console.log("Final AI Reply:", aiReply.substring(0, 200)); // log the first 200 chars
     
     return { statusCode: 200, body: JSON.stringify({ aiReply }) };
     
