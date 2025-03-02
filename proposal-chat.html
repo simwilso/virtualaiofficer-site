@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Proposal Chat – Secure Document Q&A</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <!-- Include Netlify Identity Widget -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+  <!-- Optional: Identity container (for login/logout UI) -->
+  <div id="netlifyIdentity"></div>
+
+  <!-- Secure Chat Container (initially hidden until login) -->
+  <div class="chat-container" id="secureChatContainer" style="display:none;">
+    <div class="chat-title">Proposal Q&A</div>
+    <div class="chat-display" id="chatDisplaySecure"></div>
+    <div class="chat-input-container">
+      <input type="text" class="chat-input" id="userInputSecure" placeholder="Ask about your proposal..."/>
+      <button class="chat-send-btn" id="sendBtnSecure">Send</button>
+    </div>
+  </div>
+
+  <!-- Our secure chat script -->
+  <script src="proposal-chat.js"></script>
+  <script>
+    // Initialize Netlify Identity: open login widget if no user is logged in.
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on('init', user => {
+        if (!user) {
+          window.netlifyIdentity.open();
+        } else {
+          document.getElementById('secureChatContainer').style.display = 'block';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
