@@ -15,7 +15,7 @@ async function loadDocuments() {
   // Load and cache the proposal PDF text
   if (!proposalPDFText) {
     try {
-      const pdfPath = path.resolve(__dirname, '..', 'private', 'proposal_document.pdf');
+      const pdfPath = path.resolve(__dirname, '..', 'private', 'proposal.pdf');
       const pdfBuffer = fs.readFileSync(pdfPath);
       const data = await pdf(pdfBuffer);
       proposalPDFText = data.text;
