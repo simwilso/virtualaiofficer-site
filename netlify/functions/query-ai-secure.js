@@ -1,19 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 const pdf = require('pdf-parse');
-const fetch = require('node-fetch'); // Ensure you're using node-fetch@2
+const fetch = require('node-fetch'); // Ensure node-fetch version 2 is installed
 
-// Global variables to cache the loaded document contents
 let proposalPDFText = null;
 let processDocText = null;
 
-// Function to load the secure documents from the "private" folder
+// Function to load the secure documents from the private folder
 async function loadDocuments() {
   // Load the proposal PDF text if not already loaded
   if (!proposalPDFText) {
     try {
-      // Since this function is in netlify/functions, __dirname is inside that folder.
-      // We need to go two levels up to reach the repository root, then into "private".
+      // __dirname is in netlify/functions, so go two levels up to reach the repo root, then into "private"
       const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
       console.log('Using PDF path:', pdfPath);
       const pdfBuffer = fs.readFileSync(pdfPath);
@@ -39,7 +37,7 @@ async function loadDocuments() {
   }
 }
 
-// Helper function: Keep only the last paragraph of the AI response
+// Helper function to keep only the last paragraph of the response
 function keepLastParagraph(text) {
   const paragraphs = text.split(/\n\s*\n/);
   return paragraphs[paragraphs.length - 1].trim();
@@ -50,18 +48,17 @@ exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
   }
-
+  
   // ===== Authorization Check =====
-  // (This example expects an Authorization header; adjust if needed.)
   const authHeader = event.headers.authorization;
   if (!authHeader) {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
   }
   
   try {
-    // Load the secure documents (PDF and process document)
+    // Load the secure documents (proposal PDF and process document)
     await loadDocuments();
-
+    
     // Parse the incoming request body
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
@@ -89,7 +86,9 @@ ${user_query}
 
 Answer concisely:
 `;
-
+    // Log the first 200 characters of the prompt (for debugging)
+    console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
+    
     // ===== Call the Hugging Face LLM =====
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfRes = await fetch(modelURL, {
@@ -116,6 +115,8 @@ Answer concisely:
     }
     
     const result = await hfRes.json();
+    console.log("Hugging Face result:", result);
+    
     let aiReply = "No response found.";
     if (Array.isArray(result) && result[0]?.generated_text) {
       aiReply = result[0].generated_text;
@@ -123,20 +124,13 @@ Answer concisely:
       aiReply = result.generated_text;
     }
     
-    // Optionally, keep only the last paragraph (as per your homepage logic)
+    // Optionally, keep only the last paragraph of the AI response
     aiReply = keepLastParagraph(aiReply);
     
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ aiReply })
-    };
+    return { statusCode: 200, body: JSON.stringify({ aiReply }) };
     
   } catch (err) {
     console.error("Error in secure query function:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message })
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
-
