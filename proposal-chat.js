@@ -81,15 +81,27 @@ ${text}`;
 async function fetchAIResponse(combinedPrompt) {
   try {
     addMessage('AI', "Thinking...", true);
+
+    // Retrieve token from Auth0
+    const token = await auth0Client.getTokenSilently();
+    console.log("Retrieved Auth0 token:", token);  // Debug log
+
     const response = await fetch(NETLIFY_FUNCTION_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+         "Content-Type": "application/json",
+         "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ user_query: combinedPrompt })
     });
-    if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+    console.log("Response status:", response.status);
     const data = await response.json();
-    const aiReply = data.aiReply || "No response available.";
+    if (data.error) throw new Error(data.error);
+    
+    const aiReply = data.aiReply || "No response found.";
     addMessage('AI', aiReply, true);
+    
   } catch (error) {
     console.error("Error fetching AI response:", error);
     addMessage('AI', "An error occurred. Please try again later.");
