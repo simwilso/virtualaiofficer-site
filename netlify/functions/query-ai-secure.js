@@ -1,71 +1,81 @@
 const fs = require('fs');
 const path = require('path');
 const pdf = require('pdf-parse');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // Ensure you're using node-fetch@2
 
-// Global variables for caching document contents
+// Global variables to cache the loaded document contents
 let proposalPDFText = null;
 let processDocText = null;
 
-/**
- * Loads and caches the secure documents.
- * The proposal PDF and process document are stored in the "private" folder.
- */
+// Function to load the secure documents from the "private" folder
 async function loadDocuments() {
-  // Load and cache the proposal PDF text
+  // Load the proposal PDF text if not already loaded
   if (!proposalPDFText) {
     try {
+      // Since this function is in netlify/functions, __dirname is inside that folder.
+      // We need to go two levels up to reach the repository root, then into "private".
       const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
+      console.log('Using PDF path:', pdfPath);
       const pdfBuffer = fs.readFileSync(pdfPath);
       const data = await pdf(pdfBuffer);
       proposalPDFText = data.text;
-      console.log('Loaded proposal PDF text.');
+      console.log('Loaded proposal PDF text successfully.');
     } catch (error) {
       console.error("Error loading proposal PDF:", error);
-      throw new Error("Failed to load proposal document.");
+      throw new Error("Failed to load proposal document: " + error.message);
     }
   }
   
-  // Load and cache the process document text
+  // Load the process document text if not already loaded
   if (!processDocText) {
     try {
       const processPath = path.resolve(__dirname, '..', '..', 'private', 'process_document.md');
       processDocText = fs.readFileSync(processPath, 'utf8');
-      console.log('Loaded process document text.');
+      console.log('Loaded process document text successfully.');
     } catch (error) {
       console.error("Error loading process document:", error);
-      // Optionally assign an empty string if this document is optional
       processDocText = "";
     }
   }
 }
 
+// Helper function: Keep only the last paragraph of the AI response
+function keepLastParagraph(text) {
+  const paragraphs = text.split(/\n\s*\n/);
+  return paragraphs[paragraphs.length - 1].trim();
+}
+
 exports.handler = async (event, context) => {
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
+  }
+
   // ===== Authorization Check =====
-  // This check ensures only authenticated requests (e.g., via Netlify Identity) are processed.
+  // (This example expects an Authorization header; adjust if needed.)
   const authHeader = event.headers.authorization;
   if (!authHeader) {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({ error: "Unauthorized" })
-    };
+    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
   }
   
   try {
-    // ===== Load Secure Documents =====
+    // Load the secure documents (PDF and process document)
     await loadDocuments();
 
-    // ===== Parse the Request =====
-    const { user_query } = JSON.parse(event.body);
+    // Parse the incoming request body
+    const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "Missing user_query in request body." })
-      };
+      return { statusCode: 400, body: JSON.stringify({ error: "Missing 'user_query'." }) };
+    }
+    
+    // Retrieve the Hugging Face API key from environment variables
+    const HF_API_KEY = process.env.HF_API_KEY;
+    if (!HF_API_KEY) {
+      return { statusCode: 500, body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }) };
     }
     
     // ===== Build the Combined Prompt =====
-    // The prompt instructs the AI to use only the information from the provided documents.
+    // Instruct the model to answer using ONLY the information from the secure documents.
     const combinedPrompt = `Answer the following question using ONLY the information from the documents below.
 
 --- Proposal Document (PDF) ---
@@ -75,41 +85,58 @@ ${proposalPDFText}
 ${processDocText}
 
 User's Question:
-${user_query}`;
+${user_query}
 
-    // ===== Call the AI Service =====
-    // Replace 'https://api.example.com/ai-endpoint' with your actual AI API endpoint.
-    const aiResponse = await fetch('https://api.example.com/ai-endpoint', {
-      method: 'POST',
+Answer concisely:
+`;
+
+    // ===== Call the Hugging Face LLM =====
+    const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
+    const hfRes = await fetch(modelURL, {
+      method: "POST",
       headers: {
+        "Authorization": `Bearer ${HF_API_KEY}`,
         "Content-Type": "application/json"
-        // Add additional headers if your API requires them, for example:
-        // "Authorization": "Bearer YOUR_API_KEY"
       },
-      body: JSON.stringify({ prompt: combinedPrompt })
+      body: JSON.stringify({
+        inputs: combinedPrompt,
+        parameters: {
+          max_new_tokens: 80,
+          temperature: 0.1,
+          top_p: 0.7,
+          repetition_penalty: 2.5
+        }
+      })
     });
     
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", errorText);
-      return {
-        statusCode: aiResponse.status,
-        body: JSON.stringify({ error: "AI API error", details: errorText })
-      };
+    if (!hfRes.ok) {
+      const err = await hfRes.text();
+      console.error("Hugging Face error:", err);
+      return { statusCode: hfRes.status, body: JSON.stringify({ error: "Hugging Face error: " + err }) };
     }
     
-    const aiData = await aiResponse.json();
-    const aiReply = aiData.generated_text || "No answer available.";
+    const result = await hfRes.json();
+    let aiReply = "No response found.";
+    if (Array.isArray(result) && result[0]?.generated_text) {
+      aiReply = result[0].generated_text;
+    } else if (result.generated_text) {
+      aiReply = result.generated_text;
+    }
+    
+    // Optionally, keep only the last paragraph (as per your homepage logic)
+    aiReply = keepLastParagraph(aiReply);
     
     return {
       statusCode: 200,
       body: JSON.stringify({ aiReply })
     };
-  } catch (error) {
-    console.error("Error in secure query function:", error);
+    
+  } catch (err) {
+    console.error("Error in secure query function:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ error: err.message })
     };
   }
 };
+

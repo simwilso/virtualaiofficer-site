@@ -1,16 +1,17 @@
 [build]
-  # Directory containing your site. If your site is at root, this is "."
+  # Directory containing your site (if your site is at root, this is ".")
   publish = "."
-
+  
   # Directory for serverless functions
   functions = "netlify/functions"
-  [functions]
+
+[functions]
+  # Include everything in the "private" folder (which is at the repo root)
   included_files = ["private/**"]
 
-  [[redirects]]
+[[redirects]]
   from = "/proposal-chat"
   to = "/proposal-chat.html"
   status = 200
   force = true
   conditions = { Role = "authenticated" }
-
