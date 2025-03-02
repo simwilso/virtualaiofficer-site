@@ -4,6 +4,8 @@
 
   # Directory for serverless functions
   functions = "netlify/functions"
+  [functions]
+  included_files = ["private/**"]
 
   [[redirects]]
   from = "/proposal-chat"
