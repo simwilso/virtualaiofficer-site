@@ -4,3 +4,11 @@
 
   # Directory for serverless functions
   functions = "netlify/functions"
+
+  [[redirects]]
+  from = "/proposal-chat"
+  to = "/proposal-chat.html"
+  status = 200
+  force = true
+  conditions = { Role = "authenticated" }
+
