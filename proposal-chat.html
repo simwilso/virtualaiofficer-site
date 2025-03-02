@@ -5,14 +5,9 @@
   <title>Proposal Chat – Secure Document Q&A</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <!-- Include Netlify Identity Widget -->
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
-  <!-- Optional: Identity container (for login/logout UI) -->
-  <div id="netlifyIdentity"></div>
-
-  <!-- Secure Chat Container (initially hidden until login) -->
+  <!-- Secure Chat Container -->
   <div class="chat-container" id="secureChatContainer" style="display:none;">
     <div class="chat-title">Proposal Q&A</div>
     <div class="chat-display" id="chatDisplaySecure"></div>
@@ -22,19 +17,37 @@
     </div>
   </div>
 
-  <!-- Our secure chat script -->
+  <!-- Include Auth0 SPA JS -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/1.22/auth0-spa-js.production.js"></script>
   <script src="proposal-chat.js"></script>
   <script>
-    // Initialize Netlify Identity: open login widget if no user is logged in.
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on('init', user => {
-        if (!user) {
-          window.netlifyIdentity.open();
-        } else {
-          document.getElementById('secureChatContainer').style.display = 'block';
-        }
+    const auth0Domain = 'YOUR_DOMAIN.auth0.com';
+    const auth0ClientId = 'YOUR_CLIENT_ID';
+    let auth0Client = null;
+
+    const configureClient = async () => {
+      auth0Client = await createAuth0Client({
+        domain: auth0Domain,
+        client_id: auth0ClientId,
+        redirect_uri: window.location.origin
       });
-    }
+    };
+
+    const checkAuthentication = async () => {
+      const isAuthenticated = await auth0Client.isAuthenticated();
+      if (isAuthenticated) {
+        // Show the secure chat container
+        document.getElementById('secureChatContainer').style.display = 'block';
+      } else {
+        // Redirect to homepage (or prompt login)
+        window.location.href = '/';
+      }
+    };
+
+    window.addEventListener('load', async () => {
+      await configureClient();
+      await checkAuthentication();
+    });
   </script>
 </body>
 </html>
