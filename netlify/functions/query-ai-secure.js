@@ -10,7 +10,6 @@ let processDocText = null;
 async function loadDocuments() {
   if (!proposalPDFText) {
     try {
-      // __dirname is in netlify/functions; go two levels up to the repo root, then into "private"
       const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
       console.log('Using PDF path:', pdfPath);
       const pdfBuffer = fs.readFileSync(pdfPath);
@@ -35,24 +34,22 @@ async function loadDocuments() {
   }
 }
 
-// Helper function to extract only the text after the delimiter
-function extractAnswerFromOutput(text) {
-  const marker = "### Answer:";
+// Helper function to extract text after a delimiter
+function extractSummary(text) {
+  const marker = "Summary:";
   const index = text.indexOf(marker);
   if (index !== -1) {
     return text.substring(index + marker.length).trim();
   }
-  // Fallback: return the full text trimmed if marker isn't found.
+  // Fallback: return the entire text trimmed
   return text.trim();
 }
 
 exports.handler = async (event, context) => {
-  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
   }
   
-  // Authorization Check
   const authHeader = event.headers.authorization;
   if (!authHeader) {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
@@ -61,7 +58,7 @@ exports.handler = async (event, context) => {
   try {
     console.log("query-ai-secure invoked at:", new Date().toISOString());
     await loadDocuments();
-
+    
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing 'user_query'." }) };
@@ -72,23 +69,28 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }) };
     }
     
-    // Build a unified prompt using a clear delimiter to signal the answer start.
-    const combinedPrompt = `You are an expert summarizer. Given the context below, generate a concise, one-paragraph summary of the proposal in about 200 words. Do not include any of the prompt or context in your answer—only output the summary.
+    // Build a single, unified prompt that provides the context and instructs the model
+    // to output ONLY the summary. We ignore the user_query in the summary instructions if needed.
+    const combinedPrompt = `Below is the content of a proposal document and a supporting process document.
+Generate a detailed, concise summary of the proposal in approximately 200 words.
+Your output must include ONLY the summary text and nothing else.
+Do not echo any of the prompt instructions or context.
 
-Context:
---- Proposal Document (PDF) ---
+[BEGIN CONTEXT]
+Proposal Document:
 ${proposalPDFText}
 
---- Process & Team Document ---
+Process Document:
 ${processDocText}
+[END CONTEXT]
 
 User's Question: ${user_query}
 
-### Answer:`;
+Summary:`;
     
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
     
-    // Call the Hugging Face model
+    // Call the Hugging Face LLM with a larger token limit to allow a longer summary
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfRes = await fetch(modelURL, {
       method: "POST",
@@ -99,7 +101,7 @@ User's Question: ${user_query}
       body: JSON.stringify({
         inputs: combinedPrompt,
         parameters: {
-          max_new_tokens: 300, // Increase token limit if necessary
+          max_new_tokens: 400, // Increase to allow a 200-word summary
           temperature: 0.1,
           top_p: 0.7,
           repetition_penalty: 2.5
@@ -116,15 +118,17 @@ User's Question: ${user_query}
     const result = await hfRes.json();
     console.log("Hugging Face result:", result);
     
-    let aiReply = "No response found.";
+    let fullOutput = "";
     if (Array.isArray(result) && result[0]?.generated_text) {
-      aiReply = result[0].generated_text;
+      fullOutput = result[0].generated_text;
     } else if (result.generated_text) {
-      aiReply = result.generated_text;
+      fullOutput = result.generated_text;
+    } else {
+      fullOutput = "No response found.";
     }
     
-    // Extract only the summary from the generated text.
-    aiReply = extractAnswerFromOutput(aiReply);
+    // Extract only the summary portion (text after "Summary:")
+    const aiReply = extractSummary(fullOutput);
     
     console.log("Final AI Reply (first 200 chars):", aiReply.substring(0, 200));
     
