@@ -56,51 +56,35 @@ function addMessage(sender, text, applyTypingEffect = false) {
 }
 
 // ========== HANDLE USER INPUT ==========
+// After the user submits a query:
 function handleUserInput() {
   const text = userInput.value.trim();
   if (!text) return;
+
+  // Show the user's message
   addMessage('User', text);
   userInput.value = '';
 
-  // Build combined prompt that forces the answer to be based solely on the documents.
-  let combinedPrompt = `${text}`;
-
-
-// --- Proposal Document ---
-// ${proposalDoc}
-
-// --- Process & Team Document ---
-// ${processDoc}
-
-  
-  fetchAIResponse(combinedPrompt);
+  // Send only the user query to the secure function
+  fetchAIResponse(text);
 }
 
 // ========== FETCH AI RESPONSE ==========
-async function fetchAIResponse(combinedPrompt) {
+async function fetchAIResponse(userQuery) {
   try {
     addMessage('AI', "Thinking...", true);
-
-    // Retrieve token from Auth0
     const token = await auth0Client.getTokenSilently();
-    console.log("Retrieved Auth0 token:", token);  // Debug log
-
     const response = await fetch(NETLIFY_FUNCTION_URL, {
       method: "POST",
       headers: {
          "Content-Type": "application/json",
          "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify({ user_query: combinedPrompt })
+      body: JSON.stringify({ user_query: userQuery })
     });
-
-    console.log("Response status:", response.status);
     const data = await response.json();
-    if (data.error) throw new Error(data.error);
-    
     const aiReply = data.aiReply || "No response found.";
     addMessage('AI', aiReply, true);
-    
   } catch (error) {
     console.error("Error fetching AI response:", error);
     addMessage('AI', "An error occurred. Please try again later.");
