@@ -69,16 +69,18 @@ exports.handler = async (event, context) => {
     }
     
     // Revised prompt: We remove extraneous instructions and clearly delineate context.
-    const combinedPrompt = `You are a professional summarizer. Based solely on the proposal details provided below, generate a concise, standalone one-paragraph summary of the proposal in approximately 200 words. Do not repeat or echo any text from the context; output only your own summary in clear, original language.
-
-Proposal Details:
-<<<START CONTENT>>>
-${proposalPDFText}
-
-${processDocText}
-<<<END CONTENT>>>
-
-Summary:`;
+    const combinedPrompt = `You are a professional summarizer. Based solely on the detailed proposal information provided below, generate an original, concise one-paragraph summary of the proposal in about 200 words. Do not include any repetitive phrases or generic statements (e.g., "please refer to the projects documentation for more information"). Your answer must be written in your own words and should not include any part of the context or any instructions.
+    
+        Context:
+        --- Proposal Document (PDF) ---
+        ${proposalPDFText}
+        
+        --- Process & Team Document ---
+        ${processDocText}
+        
+        User's Question: ${user_query}
+        
+        Answer:`;
     
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
     
@@ -94,9 +96,9 @@ Summary:`;
         inputs: combinedPrompt,
         parameters: {
           max_new_tokens: 400,
-          temperature: 0.1,
-          top_p: 0.7,
-          repetition_penalty: 2.5
+          temperature: 0.3,
+          top_p: 0.9,
+          repetition_penalty: 3.0
         }
       })
     });
