@@ -63,10 +63,7 @@ function handleUserInput() {
   userInput.value = '';
 
   // Build combined prompt that forces the answer to be based solely on the documents.
-  let combinedPrompt = `Answer the following question using ONLY the information from the documents below.
-
-User's Question:
-${text}`;
+  let combinedPrompt = `${text}`;
 
 
 // --- Proposal Document ---
