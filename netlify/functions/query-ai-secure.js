@@ -66,7 +66,13 @@ exports.handler = async (event, context) => {
     
     // Build a revised combined prompt
     // We clearly delineate the context and instruct the model to ignore it.
-    const combinedPrompt = `${user_query}`;
+    const combinedPrompt = `
+    provide a concise answer (about 200 words) to the following
+    
+    ${user_query}
+    
+    do not include any additional detail or the question or the prompt in your answer.
+    `;
     // provide ONLY a concise answer (about 200 words) answer to the following.
 
     // User's Question:     
