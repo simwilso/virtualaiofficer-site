@@ -66,12 +66,10 @@ exports.handler = async (event, context) => {
     
     // Build a revised combined prompt
     // We clearly delineate the context and instruct the model to ignore it.
-    const combinedPrompt = `
+    const combinedPrompt = `${user_query}`;
+    // provide ONLY a concise answer (about 200 words) answer to the following.
 
-    provide ONLY a concise answer (about 200 words) answer to the following.
-
-    User's Question: ${user_query}
-    `;
+    // User's Question:     
 // [Context Start]
 // --- Proposal Document (PDF) ---
 // ${proposalPDFText}
