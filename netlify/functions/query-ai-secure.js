@@ -6,31 +6,62 @@ const fetch = require('node-fetch'); // Ensure node-fetch@2 is installed
 let proposalPDFText = null;
 let processDocText = null;
 
+// Load secure documents from the private folder
 async function loadDocuments() {
   if (!proposalPDFText) {
-    const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
-    const pdfBuffer = fs.readFileSync(pdfPath);
-    const data = await pdf(pdfBuffer);
-    proposalPDFText = data.text;
+    try {
+      // __dirname is in netlify/functions; go two levels up to the repo root, then into "private"
+      const pdfPath = path.resolve(__dirname, '..', '..', 'private', 'proposal.pdf');
+      console.log('Using PDF path:', pdfPath);
+      const pdfBuffer = fs.readFileSync(pdfPath);
+      const data = await pdf(pdfBuffer);
+      proposalPDFText = data.text;
+      console.log('Loaded proposal PDF text successfully.');
+    } catch (error) {
+      console.error("Error loading proposal PDF:", error);
+      throw new Error("Failed to load proposal document: " + error.message);
+    }
   }
+  
   if (!processDocText) {
-    const processPath = path.resolve(__dirname, '..', '..', 'private', 'process_document.md');
-    processDocText = fs.readFileSync(processPath, 'utf8');
+    try {
+      const processPath = path.resolve(__dirname, '..', '..', 'private', 'process_document.md');
+      processDocText = fs.readFileSync(processPath, 'utf8');
+      console.log('Loaded process document text successfully.');
+    } catch (error) {
+      console.error("Error loading process document:", error);
+      processDocText = "";
+    }
   }
 }
 
+// Helper function to extract only the text after the delimiter
+function extractAnswerFromOutput(text) {
+  const marker = "### Answer:";
+  const index = text.indexOf(marker);
+  if (index !== -1) {
+    return text.substring(index + marker.length).trim();
+  }
+  // Fallback: return the full text trimmed if marker isn't found.
+  return text.trim();
+}
+
 exports.handler = async (event, context) => {
+  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST." }) };
   }
   
+  // Authorization Check
   const authHeader = event.headers.authorization;
   if (!authHeader) {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
   }
   
   try {
+    console.log("query-ai-secure invoked at:", new Date().toISOString());
     await loadDocuments();
+
     const { user_query } = JSON.parse(event.body || '{}');
     if (!user_query) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing 'user_query'." }) };
@@ -41,8 +72,8 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }) };
     }
     
-    // Build a single, unified prompt with the context and detailed instructions:
-    const combinedPrompt = `You are an expert summarizer. Based solely on the context below, produce a concise one-paragraph summary (approximately 200 words) of the proposal. Do not include any context or instructions in your answer.
+    // Build a unified prompt using a clear delimiter to signal the answer start.
+    const combinedPrompt = `You are an expert summarizer. Given the context below, generate a concise, one-paragraph summary of the proposal in about 200 words. Do not include any of the prompt or context in your answer—only output the summary.
 
 Context:
 --- Proposal Document (PDF) ---
@@ -53,8 +84,11 @@ ${processDocText}
 
 User's Question: ${user_query}
 
-Answer:`;
+### Answer:`;
     
+    console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
+    
+    // Call the Hugging Face model
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfRes = await fetch(modelURL, {
       method: "POST",
@@ -65,7 +99,7 @@ Answer:`;
       body: JSON.stringify({
         inputs: combinedPrompt,
         parameters: {
-          max_new_tokens: 200,
+          max_new_tokens: 300, // Increase token limit if necessary
           temperature: 0.1,
           top_p: 0.7,
           repetition_penalty: 2.5
@@ -75,10 +109,13 @@ Answer:`;
     
     if (!hfRes.ok) {
       const err = await hfRes.text();
+      console.error("Hugging Face error:", err);
       return { statusCode: hfRes.status, body: JSON.stringify({ error: "Hugging Face error: " + err }) };
     }
     
     const result = await hfRes.json();
+    console.log("Hugging Face result:", result);
+    
     let aiReply = "No response found.";
     if (Array.isArray(result) && result[0]?.generated_text) {
       aiReply = result[0].generated_text;
@@ -86,11 +123,15 @@ Answer:`;
       aiReply = result.generated_text;
     }
     
-    // Optionally process the answer further
-    aiReply = aiReply.trim();
+    // Extract only the summary from the generated text.
+    aiReply = extractAnswerFromOutput(aiReply);
+    
+    console.log("Final AI Reply (first 200 chars):", aiReply.substring(0, 200));
+    
     return { statusCode: 200, body: JSON.stringify({ aiReply }) };
     
   } catch (err) {
+    console.error("Error in secure query function:", err);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
