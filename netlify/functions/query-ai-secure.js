@@ -79,6 +79,8 @@ ${processDocText}
 Using this provide ONLY a concise answer (about 200 words) answer to the following.
 
 User's Question: ${user_query}
+
+Provide NOTHING other than your answer in your response.
 `;
     
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
