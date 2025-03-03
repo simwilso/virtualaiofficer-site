@@ -6,7 +6,6 @@ const fetch = require('node-fetch'); // Ensure node-fetch@2 is installed
 let proposalPDFText = null;
 let processDocText = null;
 
-// Load secure documents from the private folder
 async function loadDocuments() {
   if (!proposalPDFText) {
     try {
@@ -34,14 +33,14 @@ async function loadDocuments() {
   }
 }
 
-// Helper function to extract text after a delimiter
+// Helper to extract the summary from the output using a marker.
+// In this case, we expect the model to output the summary after the "Summary:" marker.
 function extractSummary(text) {
   const marker = "Summary:";
   const index = text.indexOf(marker);
   if (index !== -1) {
     return text.substring(index + marker.length).trim();
   }
-  // Fallback: return the entire text trimmed
   return text.trim();
 }
 
@@ -69,28 +68,21 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, body: JSON.stringify({ error: "HF_API_KEY not set in Netlify." }) };
     }
     
-    // Build a single, unified prompt that provides the context and instructs the model
-    // to output ONLY the summary. We ignore the user_query in the summary instructions if needed.
-    const combinedPrompt = `Below is the content of a proposal document and a supporting process document.
-Generate a detailed, concise summary of the proposal in approximately 200 words.
-Your output must include ONLY the summary text and nothing else.
-Do not echo any of the prompt instructions or context.
+    // Revised prompt: We remove extraneous instructions and clearly delineate context.
+    const combinedPrompt = `You are a professional summarizer. Based solely on the proposal details provided below, generate a concise, standalone one-paragraph summary of the proposal in approximately 200 words. Do not repeat or echo any text from the context; output only your own summary in clear, original language.
 
-[BEGIN CONTEXT]
-Proposal Document:
+Proposal Details:
+<<<START CONTENT>>>
 ${proposalPDFText}
 
-Process Document:
 ${processDocText}
-[END CONTEXT]
-
-User's Question: ${user_query}
+<<<END CONTENT>>>
 
 Summary:`;
     
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
     
-    // Call the Hugging Face LLM with a larger token limit to allow a longer summary
+    // Call Hugging Face API with increased token limit to allow a full summary.
     const modelURL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
     const hfRes = await fetch(modelURL, {
       method: "POST",
@@ -101,7 +93,7 @@ Summary:`;
       body: JSON.stringify({
         inputs: combinedPrompt,
         parameters: {
-          max_new_tokens: 400, // Increase to allow a 200-word summary
+          max_new_tokens: 400,
           temperature: 0.1,
           top_p: 0.7,
           repetition_penalty: 2.5
@@ -127,8 +119,14 @@ Summary:`;
       fullOutput = "No response found.";
     }
     
-    // Extract only the summary portion (text after "Summary:")
-    const aiReply = extractSummary(fullOutput);
+    // Attempt to extract the summary after the "Summary:" marker.
+    let aiReply = extractSummary(fullOutput);
+    
+    // If the marker wasn't found, try to remove any prompt echoes manually.
+    if (!aiReply || aiReply.length < 20) {
+      // Fallback: Remove the prompt portion if it's repeated.
+      aiReply = fullOutput.replace(combinedPrompt, "").trim();
+    }
     
     console.log("Final AI Reply (first 200 chars):", aiReply.substring(0, 200));
     
