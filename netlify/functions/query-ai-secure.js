@@ -66,7 +66,7 @@ exports.handler = async (event, context) => {
     
     // Build a revised combined prompt
     // We clearly delineate the context and instruct the model to ignore it.
-    const combinedPrompt = `Below is some context that you must use ONLY to generate a response to the User's Question.
+    const combinedPrompt = `Below is some context.
 
 [Context Start]
 --- Proposal Document (PDF) ---
@@ -76,9 +76,9 @@ ${proposalPDFText}
 ${processDocText}
 [Context End]
 
-User's Question: ${user_query}
+Using this provide ONLY a concise answer (about 200 words) answer to the following.
 
-ONLY output a concise answer (about 200 words) to the User's Question with no other comments or detail.
+User's Question: ${user_query}
 `;
     
     console.log("Combined Prompt (first 200 chars):", combinedPrompt.substring(0, 200));
