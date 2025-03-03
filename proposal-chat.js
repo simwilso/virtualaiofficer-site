@@ -65,15 +65,17 @@ function handleUserInput() {
   // Build combined prompt that forces the answer to be based solely on the documents.
   let combinedPrompt = `Answer the following question using ONLY the information from the documents below.
 
---- Proposal Document ---
-${proposalDoc}
-
---- Process & Team Document ---
-${processDoc}
-
 User's Question:
 ${text}`;
 
+
+// --- Proposal Document ---
+// ${proposalDoc}
+
+// --- Process & Team Document ---
+// ${processDoc}
+
+  
   fetchAIResponse(combinedPrompt);
 }
 
